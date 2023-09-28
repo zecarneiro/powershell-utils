@@ -1,11 +1,16 @@
-function Compile {
+# Author: José M. C. Noronha
+
+# ---------------------------------------------------------------------------- #
+#                                   FUNCTIONS                                  #
+# ---------------------------------------------------------------------------- #
+function compile {
     param (
         [string] $cmd,
         [string] $cwd
     )
     $currentDir = "$pwd"
-    InfoLog -message "Compiling..."
-    cd "$cwd"
-    Eval -expression "$cmd"
-    cd "$currentDir"
+    log "Compiling..."
+    Set-Location "$cwd"
+    evaladvanced "$cmd"
+    Set-Location "$currentDir"
 }

@@ -1,71 +1,9 @@
-# Autor: José M. C. Noronha
+# Author: José M. C. Noronha
 
 # ---------------------------------------------------------------------------- #
 #                                   FUNCTIONS                                  #
 # ---------------------------------------------------------------------------- #
-function RestartSO {
-    param(
-        [string] $message
-    )
-    if ($message.length -le 0) {
-        $message = "Will be restart PC"
-    }
-    $userInput = (ReadUserKeyboard -message "$message. Continue(y/N)? ")
-    if ($userInput -eq "Y" -or $userInput -eq "y") {
-        shutdown /r /t 0
-    }
-    exit 0
-}
-
-function ShutdownSO {
-    param(
-        [string] $message
-    )
-    if ($message.length -le 0) {
-        $message = "Will be shutdown PC"
-    }
-    $userInput = (ReadUserKeyboard -message "$message. Continue(y/N)? ")
-    if ($userInput -eq "Y" -or $userInput -eq "y") {
-        shutdown /s /t 0
-    }
-    exit 0
-}
-
-function AddBootApplication {
-    param ([string] $name, [string] $command, [switch] $hidden)
-    $homeDir = (GetEnvironmentVariables -name 'userprofile')
-    $startupDir = "$homeDir\Start Menu\Programs\Startup"
-    $scriptName = "$command"
-    if ($hidden) {
-        $scriptName = "$OTHER_APPS_DIR\$name.vbs"
-        WriteFile -f "$scriptName" -d "Dim WinScriptHost"
-        WriteFile -f "$scriptName" -d "Set WinScriptHost = CreateObject(`"WScript.Shell`")" -a
-        WriteFile -f "$scriptName" -d "WinScriptHost.Run `"`"`"`" & `"$command`" & `"`"`"`", 0, False" -a
-        WriteFile -f "$scriptName" -d "Set WinScriptHost = Nothing" -a
-    }
-    $shell = new-object -com wscript.shell
-    $lnk = $shell.createShortcut("$startupDir\$name.lnk")
-    $lnk.TargetPath="$scriptName"
-    $lnk.Save()
-}
-
-function DelBootApplication {
-    param ([string] $name)
-    $homeDir = (GetEnvironmentVariables -name 'userprofile')
-    $startupDir = "$homeDir\Start Menu\Programs\Startup"
-    if ((FileExist -file "$OTHER_APPS_DIR\${name}.vbs")) {
-        FileDelete -file "$OTHER_APPS_DIR\${name}.vbs"
-    }
-    if ((FileExist -file "$startupDir\$name.lnk")) {
-        FileDelete -file "$startupDir\$name.lnk"
-    }
-}
-
-function HasInternetConnection {
-    return ((Test-Connection 8.8.8.8 -Count 1 -Quiet) -or (Test-Connection 8.8.4.4 -Count 1 -Quiet) -or (Test-Connection time.google.com -Count 1 -Quiet))
-}
-
-function TestRegistryValue {
+function test_registry_value {
     param (
         [parameter(Mandatory=$true)][ValidateNotNullOrEmpty()] $path,
         [parameter(Mandatory=$true)][ValidateNotNullOrEmpty()] $value
@@ -78,7 +16,7 @@ function TestRegistryValue {
     return $true
 }
 
-function TestRegistryPath {
+function test_registry_path {
     param ([parameter(Mandatory=$true)][ValidateNotNullOrEmpty()] $path)
     try {
         Get-ItemProperty -Path $Path | Out-Null
@@ -88,96 +26,47 @@ function TestRegistryPath {
     }
 }
 
-function IsOperatingSystemVersion {
-    param(
-        [parameter(Mandatory=$true)]
-        [ValidateNotNullOrEmpty()]
-        [string] $version
-    )
-    $info = (Get-ComputerInfo)
-    if ($info.OsVersion -like $version) {
-        return $true
-    }
-    return $false
-}
-
-function CreateProfileFile {
+function create_profile_file {
     $profilePowershell = $PROFILE.CurrentUserAllHosts
-    $profilePowershellAlias = "$home\powershell-alias.ps1"
+    $profilePowershellCustom = "powershell-profile-custom.ps1"
+    $userBinDirectory = "$home\.local\bin"
     
     # POWERSHELL
-    if (!(FileExist "$profilePowershell")) {
-        InfoLog "Creating Powershell Script profile to run when powrshell start: $profilePowershell"
+    if (!(Test-Path -Path "$profilePowershell" -PathType Leaf)) {
+        infolog "Creating Powershell Script profile to run when powrshell start: $profilePowershell"
         New-Item $profilePowershell -ItemType file -Force
-
-        # Write aliases
-        $powershellData = @"
-# $AUTHOR
-function show-help {
-    Write-Host "This Help, show how to get help for commands. One of the options"
-    Write-Host "Equivalent linux commands:"
-    Write-Host "- tee"
-    Write-Host "- mkdir"
-    Write-Host "- cat"
-    Write-Host "- ls"
-    Write-Host "- sleep"
-    Write-Host "- find"
-    Write-Host "################"
-    Write-Host ">>>> Powershell <<<<"
-    Write-Host "1- Get-Help COMMAND"
-    Write-Host "2- COMMAND -?"
-    Write-Host ""
-    Write-Host ">>>> CMD <<<<"
-    Write-Host "1- help COMMAND"
-    Write-Host "2- COMMAND /?"
+    }
+    if (!(Test-Path -Path "$userBinDirectory")) {
+        New-Item -ItemType Directory -Path "$userBinDirectory"
+        $pathEnv = ($env:Path -split ';')
+        if (!("$userBinDirectory" -in $pathEnv)) {
+            $pathEnv += "$userBinDirectory"
+            [Environment]::SetEnvironmentVariable("Path", ($pathEnv -join ";"), [System.EnvironmentVariableTarget]::User)
+            infolog "Please, Restart the Terminal to change take effect!"
+        }
+    }
+    Copy-Item -Path "$SCRIPT_UTILS_DIR\others\powershell-profile\powershell-profile-custom.ps1" -Destination "$home" -PassThru | Out-Null
+    if ($null -eq (Select-String -Path "$profilePowershell" -Pattern "$profilePowershellCustom")) {
+        Write-Output ". `"$home\$profilePowershellCustom`"" | Tee-Object "$profilePowershell" -Append
+    }
+    . $profilePowershell
+    # Source of those files: https://unxutils.sourceforge.net/ or on scoop: unxutils-cut
+    Get-ChildItem "$SCRIPT_UTILS_DIR\others\bashcmd" | Foreach-Object {
+        $fullName = ($_.FullName)
+        $basename = ($_.Basename)
+        $extension = ([System.IO.Path]::GetExtension("$fullName"))
+        Copy-Item $_.FullName -Destination "$userBinDirectory\${basename}unix${extension}" -Force
+    }
+    reloadprofile
 }
 
-function mkdir-p {
-    param(
-        [Parameter(Mandatory=`$true,ValueFromPipelineByPropertyName=`$true)]
-        [ValidateNotNull()]
-        [string] `$directory
-    )
-    if (! (Test-Path `$directory)) {
-        mkdir `"`$directory`"
-    }
-}
-
-function __GoBack { cd .. }
-Set-Alias -Name ".." -Value "__GoBack"
-"@
-        WriteFile -f "$profilePowershellAlias" -d "$powershellData"
-        WriteFile -f "$profilePowershell" -d ". `"$profilePowershellAlias`"" -a
-
-        # Default aliases
-        AddAlias -name "powershellrc-config" -command "nano.exe `"$profilePowershell`""
-    }
-}
-
-function AddAlias {
-    param(
-        [string] $name,
-        [string] $command,
-        [switch] $passArgs
-    )
-    $profilePowershellAlias = "$home\powershell-alias.ps1"
-    if ($null -ne (Select-String -Path "$profilePowershellAlias" -Pattern "function $name {")) {
-        RemoveLinesFromFile -file "$profilePowershellAlias" -match "$name"
-    }
-    if ($passArgs) {
-        WriteFile -f $profilePowershellAlias -d "function $name {$command `$args}" -a
-    } else {
-        WriteFile -f $profilePowershellAlias -d "function $name {$command}" -a
-    }
-}
-
-function SetBinariesOnSystem {
+function set_binaries_on_system {
     param([string] $binary)
-    Eval -expression "sudo cp `"$binary`" C:\Windows\System32"
-    Eval -expression "rm `"$binary`""
+    evaladvanced "sudo cp `"$binary`" C:\Windows\System32"
+    evaladvanced "rm `"$binary`""
 }
 
-function AddContextMenu {
+function add_context_menu {
     param (
         [string] $context,
         [string] $command,
@@ -193,39 +82,64 @@ function AddContextMenu {
     )
     $contextNoSpace = $context -replace " ",""
     if ($delete) {
-        InfoLog "Remove: $context"
+        infolog "Remove: $context"
         foreach ($type_context_element in $contextType) {
-            Eval "Remove-Item -Path `"$type_context_element\$contextNoSpace`" -Recurse"
+            evaladvanced "Remove-Item -Path `"$type_context_element\$contextNoSpace`" -Recurse"
         }
-        SuccessLog "Remove Done."
+        oklog "Remove Done."
     } else {
-        if (!(CommandExist "wt")) {
-            ErrorLog "Please, install Windows Terminal"
+        if (!(commandexists "wt")) {
+            errorog "Please, install Windows Terminal"
             exit 1
         }
         if ([string]::IsNullOrEmpty($context)) {
-            ErrorLog "Invalid context!!!"
+            errorog "Invalid context!!!"
             exit 1
         }
         if ([string]::IsNullOrEmpty($command)) {
-            ErrorLog "Invalid command!!!"
+            errorog "Invalid command!!!"
             exit 1
         }
-        AddContextMenu -context "$context"
-        InfoLog "Add Context Menu: $context"
+        add_context_menu -context "$context"
+        infolog "Add Context Menu: $context"
         $command = "command"
         if (![string]::IsNullOrEmpty($commandArgs)) {
             $command = "$command $commandArgs"
         }
         foreach ($type_context_element in $contextType) {
-            Eval "New-Item -Path `"$type_context_element`" -Name `"$contextNoSpace`""
-            Eval "New-Item -Path `"$type_context_element\$contextNoSpace`" -Name `"$command`""
-            Eval "New-ItemProperty -Path `"$type_context_element\$contextNoSpace\$command`" -Name `"$contextNoSpace`" -Value `"$command`"  -PropertyType `"String`""
+            evaladvanced "New-Item -Path `"$type_context_element`" -Name `"$contextNoSpace`""
+            evaladvanced "New-Item -Path `"$type_context_element\$contextNoSpace`" -Name `"$command`""
+            evaladvanced "New-ItemProperty -Path `"$type_context_element\$contextNoSpace\$command`" -Name `"$contextNoSpace`" -Value `"$command`"  -PropertyType `"String`""
         }
-        SuccessLog "Added Done."
+        oklog "Added Done."
     }
+    restartexplorer
+}
 
-    # Restart Explorer
-    taskkill /F /IM explorer.exe
-    Start-Process explorer.exe
+function add_boot_application {
+    param ([string] $name, [string] $command, [switch] $hidden)
+    $startupDir = "$home\Start Menu\Programs\Startup"
+    $scriptName = "$command"
+    if ($hidden) {
+        $scriptName = "$OTHER_APPS_DIR\$name.vbs"
+        Write-Output "Dim WinScriptHost" | Tee-Object "$scriptName" | Out-Null
+        Write-Output "Set WinScriptHost = CreateObject(`"WScript.Shell`")" | Tee-Object "$scriptName" -Append | Out-Null
+        Write-Output "WinScriptHost.Run `"`"`"`" & `"$command`" & `"`"`"`", 0, False" | Tee-Object "$scriptName" -Append | Out-Null
+        Write-Output "Set WinScriptHost = Nothing" | Tee-Object "$scriptName" -Append | Out-Null
+    }
+    $shell = new-object -com wscript.shell
+    $lnk = $shell.createShortcut("$startupDir\$name.lnk")
+    $lnk.TargetPath="$scriptName"
+    $lnk.Save()
+}
+
+function del_boot_application {
+    param ([string] $name)
+    $startupDir = "$home\Start Menu\Programs\Startup"
+    if ((fileexists "$OTHER_APPS_DIR\${name}.vbs")) {
+        deletefile "$OTHER_APPS_DIR\${name}.vbs"
+    }
+    if ((fileexists "$startupDir\$name.lnk")) {
+        deletefile "$startupDir\$name.lnk"
+    }
 }

@@ -1,37 +1,35 @@
-# Autor: José M. C. Noronha
+# Author: José M. C. Noronha
 
-# ---------------------------------------------------------------------------- #
-#                                   VARIABLE                                   #
-# ---------------------------------------------------------------------------- #
-$AUTHOR = "Author: José M. C. Noronha"
+# Get Script directory
 $SCRIPT_UTILS_DIR = ($PSScriptRoot)
-$HOME_DIR = [System.Environment]::GetEnvironmentVariable("userprofile")
-$OTHER_APPS_DIR = "$HOME_DIR\otherapps"
-$CONFIG_DIR = "$HOME_DIR\.config"
-$USER_DOCUMENTS_DIR = [Environment]::GetFolderPath("MyDocuments")
-$APPS_DIR="$SCRIPT_UTILS_DIR\..\apps"
-$APPS_BIN_DIR="$APPS_DIR\bin"
-$APPS_GO_DIR="$APPS_DIR\go"
-$APPS_BASH_DIR="$APPS_DIR\bash"
-$APPS_JAVASCRIPT_DIR="$APPS_DIR/javascript"
-$IMAGE_UTILS_DIR = "$SCRIPT_UTILS_DIR\images"
 
 # ---------------------------------------------------------------------------- #
 #                                    IMPORTS                                   #
 # ---------------------------------------------------------------------------- #
+. "${SCRIPT_UTILS_DIR}/others/powershell-profile/powershell-profile-custom.ps1"
 Get-ChildItem ($SCRIPT_UTILS_DIR + "\src\*.ps1") | ForEach-Object { . $_.FullName } | Out-Null
+
+# ---------------------------------------------------------------------------- #
+#                                   VARIABLE                                   #
+# ---------------------------------------------------------------------------- #
+$TEMP_DIR=$(mktemp -d)
+$CONFIG_DIR = "$home\.config"
+$OTHER_APPS_DIR = "$home\otherapps"
+$APPS_DIR="$TEMP_DIR\apps"
+$APPS_BIN_DIR="$APPS_DIR\bin"
+$IMAGE_UTILS_DIR = "$SCRIPT_UTILS_DIR\images"
 
 # ---------------------------------------------------------------------------- #
 #                                  OPERATIONS                                  #
 # ---------------------------------------------------------------------------- #
-function CreateDirs {
+function create_dirs {
     $dirs = @("$OTHER_APPS_DIR", "$CONFIG_DIR", "$APPS_BIN_DIR")
     Foreach ($dir in $dirs) {
-        CreateDirectory -file "$dir"
+        New-Item -ItemType Directory -Force -Path "$dir" | Out-Null
     }
 }
 
 # ---------------------------------------------------------------------------- #
 #                                     MAIN                                     #
 # ---------------------------------------------------------------------------- #
-CreateDirs
+create_dirs
