@@ -161,7 +161,12 @@ function icon_extractor {
 }
 
 function create_shortcut_file {
-    param ([string] $name, [string] $target, [string] $targetArgs, [switch] $terminal)
+    param ([string] $name, [string] $target, [string] $targetArgs, [bool] $terminal)
+    create_shortcut_file_generic -name "$([Environment]::GetFolderPath('Programs'))\${name}.lnk" -target "$target" -targetArgs "$targetArgs" -terminal $terminal
+}
+
+function create_shortcut_file_generic {
+    param ([string] $name, [string] $target, [string] $targetArgs, [bool] $terminal)
     if ([string]::IsNullOrEmpty($name)) {
         errorlog "Invalid argument: -name"
         exit 1
@@ -179,7 +184,7 @@ function create_shortcut_file {
 
     # Create and save
     $shell = New-Object -COM WScript.Shell
-    $lnk = $shell.createShortcut("$([Environment]::GetFolderPath('Programs'))\${name}.lnk")
+    $lnk = $shell.createShortcut("$name")
     $lnk.TargetPath = $target
     if (-not [string]::IsNullOrEmpty($targetArgs)) {
         $lnk.Arguments = $targetArgs

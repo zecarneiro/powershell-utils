@@ -105,10 +105,12 @@ function install_scoop {
 function install_base_scoop_package() {
     if (!(commandexists -command "nano")) {
         log "`nInstall nano"
+        evaladvanced "scoop bucket add main"
         evaladvanced "scoop install main/nano"
     }
     if (!(commandexists -command "vim")) {
         log "`nInstall vim"
+        evaladvanced "scoop bucket add main"
         evaladvanced "scoop install main/vim"
     }
 }

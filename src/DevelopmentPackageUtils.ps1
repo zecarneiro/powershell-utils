@@ -27,6 +27,7 @@ function install_node_typescript_javascript {
 
 function install_python {
     if ((show_message_dev "Python3/PIP") -eq "y") {
+        evaladvanced "scoop bucket add main"
         evaladvanced "scoop install main/python"
         evaladvanced "pip install virtualenv"
     }
@@ -36,12 +37,13 @@ function install_java {
     # To download executable go to: https://adoptopenjdk.net/ or https://adoptium.net/
     if ((show_message_dev "Java") -eq "y") {
         log "`nSet JAVA_HOME in option."
-        evaladvanced "winget install -i AdoptOpenJDK.OpenJDK.11"
+        evaladvanced "winget install -i --id=EclipseAdoptium.Temurin.17.JDK"
     }
 }
 
 function install_maven {
     if ((show_message_dev "Maven") -eq "y") {
+        evaladvanced "scoop bucket add main"
         evaladvanced "scoop install main/maven"
     }
 }
@@ -49,32 +51,32 @@ function install_maven {
 function install_cpp_c {
     if ((show_message_dev "C/C++/Make/CLang") -eq "y") {
         log "`nAdd PATH for LLVM and CMake"
-        evaladvanced "scoop install make"
+        evaladvanced "scoop bucket add main"
+        evaladvanced "scoop install main/make"
         evaladvanced "scoop install main/gcc"
-        evaladvanced "scoop install cmake"
-        evaladvanced "scoop install clangd"
+        evaladvanced "scoop install main/cmake"
+        evaladvanced "scoop install main/clangd"
     }
 }
 
 function install_php {
     if ((show_message_dev "PHP") -eq "y") {
-        evaladvanced "scoop install php"
+        evaladvanced "scoop bucket add main"
+        evaladvanced "scoop install main/php"
     }
 }
 
 function install_golang {
     if ((show_message_dev "Go") -eq "y") {
-        $executable = "$APPS_BIN_DIR\go1.20.5.windows-amd64.msi"
-        download -url "https://go.dev/dl/go1.20.5.windows-amd64.msi" -file "$executable"
-        evaladvanced "Start-Process $executable"
-        evaladvanced "rm $executable"
+        evaladvanced "winget install --id=GoLang.Go"
     }
 }
 
 function install_sqlite3 {
     if ((show_message_dev "Sqlite3") -eq "y") {
         infolog "`nDownload link example: https://www.sqlite.org/2022/sqlite-tools-win32-x86-{version}.zip"
-        evaladvanced "scoop install sqlite"
+        evaladvanced "scoop bucket add main"
+        evaladvanced "scoop install main/sqlite"
     }
 }
 

@@ -1,6 +1,11 @@
 # Author: José M. C. Noronha
 # Some code has source: https://github.com/ChrisTitusTech/powershell-profile
 
+# BASH-LIKE TAB COMPLETION IN POWERSHELL
+Set-PSReadlineKeyHandler -Key Tab -Function Complete
+Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
+Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
+
 # ---------------------------------------------------------------------------- #
 #                                    SYSTEM                                    #
 # ---------------------------------------------------------------------------- #
@@ -150,14 +155,14 @@ function prompt {
 function gouserotherapps {
     $directory = "$home\otherapps"
     if (!(directoryexists "$directory")) {
-        mkdir "$directory"
+        mkdir -p "$directory"
     }
     Set-Location "$directory"
 }
 function gouserconfig {
     $directory = "$home\.config"
     if (!(directoryexists "$directory")) {
-        mkdir "$directory"
+        mkdir -p "$directory"
     }
     Set-Location "$directory"
 }
@@ -185,16 +190,7 @@ function cd.... { Set-Location ..\..\.. }
 Set-Alias -Name "...." -Value cd....
 function cd..... { Set-Location ..\..\..\.. }
 Set-Alias -Name "....." -Value cd.....
-function mkdir {
-    param(
-        [Parameter(Mandatory=$true,ValueFromPipelineByPropertyName=$true)]
-        [ValidateNotNull()]
-        [string] $directory
-    )
-    if (!(directoryexists $directory)) {
-        New-Item -ItemType Directory -Path "$directory"
-    }
-}
+Set-Alias -Name mkdir -Value mkdirunix.exe
 function ldir {
     param([string] $cwd)
     if ([string]::IsNullOrEmpty($cwd)) {
@@ -340,21 +336,48 @@ function mktemp {
         touch "$tmpfile"
     }
 }
-function rmunix {
+
+function wslshutdown {
     param(
-        [string] $file,
-        [switch] $r,
-        [switch] $f,
-        [switch] $rf,
-        [switch] $fr,
-        [switch] $v
+        [switch] $force
     )
-    $cmdToExecute = "Remove-Item `"$file`""
-    if ($r -or $rf -or $fr) { $cmdToExecute = "$cmdToExecute -Recurse" }
-    if ($f -or $rf -or $fr) { $cmdToExecute = "$cmdToExecute -Force" }
-    if ($v) { $cmdToExecute = "$cmdToExecute -Verbose" }
-    evaladvanced "$cmdToExecute"
+    if ($force) {
+        evaladvanced "sudo taskkill /F /IM wslservice.exe"
+    } else {
+        evaladvanced "wsl --shutdown"
+    }
 }
+
+function wslconfigadvanced {
+    $configFile = "$home\.wslconfig"
+    infolog "This confofigurations only works on windows 11 or newer!!"
+    $ram = Read-Host "Insert max of RAM(GB) - ENTER TO SKIP"
+    $processor = Read-Host "Insert max of Processor - ENTER TO SKIP"
+    $data = $null
+    if ($ram) {
+        $ramData = "memory=${ram}GB"
+        if ($null -ne $data) {
+            $data = "${data}`n$ramData"
+        } else {
+            $data = $ramData
+        }
+    }
+    if ($processor) {
+        $processorData = "processors=${processor}"
+        if ($null -ne $data) {
+            $data = "${data}`n$processorData"
+        } else {
+            $data = $processorData
+        }
+    }
+    if ($null -ne $data) {
+        $data = "[wsl2]`n${data}"
+        Write-Output "$data" | Tee-Object "$configFile" | Out-Null
+        wslshutdown
+    }
+}
+
+Set-Alias -Name rmunix -Value rmunix.exe
 
 
 # ---------------------------------------------------------------------------- #
@@ -616,11 +639,18 @@ function gitresetfile() {
 #                                PACKAGES UTILS                                #
 # ---------------------------------------------------------------------------- #
 function npmupgrade { evaladvanced "npm outdated -g; npm update -g" }
-function wingetupgrade { evaladvanced "winget upgrade --all" }
-function scoopupgrade { evaladvanced "scoop update --all" }
-function systemupgrade { npmupgrade; wingetupgrade; scoopupgrade }
-function scoopclean { evaladvanced "scoop cleanup --all" }
-function systemclean { scoopclean }
-function wingetuninstall { winget uninstall --purge $args }
-function scoopuninstall { scoop uninstall --purge $args }
 
+function wingetupgrade {
+    infolog "To upgrade 'Windows Terminal', go to Microsoft Store and search for 'Windows Terminal'"
+    evaladvanced "winget upgrade --all"
+}
+function wingetuninstall { winget uninstall --purge $args }
+
+function scoopupgrade { evaladvanced "scoop update --all" }
+function scoopuninstall { scoop uninstall --purge $args }
+function scoopclean { evaladvanced "scoop cleanup --all" }
+
+function wslupgrade { evaladvanced "sudo wsl.exe --update" }
+
+function systemupgrade { npmupgrade; log; wingetupgrade; log; scoopupgrade; log; wslupgrade }
+function systemclean { scoopclean }
