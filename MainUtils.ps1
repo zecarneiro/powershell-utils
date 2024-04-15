@@ -6,8 +6,8 @@ $SCRIPT_UTILS_DIR = ($PSScriptRoot)
 # ---------------------------------------------------------------------------- #
 #                                    IMPORTS                                   #
 # ---------------------------------------------------------------------------- #
-. "${SCRIPT_UTILS_DIR}/others/powershell-profile/powershell-profile-custom.ps1"
-Get-ChildItem ($SCRIPT_UTILS_DIR + "\src\*.ps1") | ForEach-Object { . $_.FullName } | Out-Null
+Get-ChildItem ("${SCRIPT_UTILS_DIR}\others\profile-shell\*.ps1") | ForEach-Object { . $_.FullName } | Out-Null
+Get-ChildItem ("${SCRIPT_UTILS_DIR}\src\*.ps1") | ForEach-Object { . $_.FullName } | Out-Null
 
 # ---------------------------------------------------------------------------- #
 #                                   VARIABLE                                   #

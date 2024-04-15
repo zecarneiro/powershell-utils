@@ -9,6 +9,15 @@ function install_all_packages() {
     install_chocolatey
 }
 
+function install_all_base_packages() {
+    install_base_winget_package
+    install_base_scoop_package
+    install_base_chocolatey_package
+}
+
+# ---------------------------------------------------------------------------- #
+#                                 PACKAGES AREA                                #
+# ---------------------------------------------------------------------------- #
 # This function copied from the original: https://www.powershellgallery.com/packages/WingetTools/1.3.0
 function install_winget {
     #Install the latest package from GitHub
@@ -75,43 +84,12 @@ function install_winget {
         }
         Write-Verbose "[$((Get-Date).TimeofDay)] Ending $($myinvocation.mycommand)"
     }
-    install_base_winget_package
-}
-function install_base_winget_package {
-    if (!(commandexists -command "git")) {
-        log "`nInstall Git - Set Add the Git Bash profile to Windows terminal"
-        evaladvanced "winget install -i Git.Git"
-    }
-    if (!(commandexists -command "gsudo")) {
-        log "`nInstall Gsudo - sudo"
-        evaladvanced "winget install --id=gerardog.gsudo"
-        evaladvanced "gsudo config CacheMode auto"
-    }
-    if (!(fileexists -file "C:\Users\nb26323\AppData\Local\Programs\Markdown Viewer\Markdown Viewer.exe")) {
-        log "`nInstall Markdown Viewer"
-        evaladvanced "winget install -e --id c3er.mdview"
-    }
 }
 
 function install_scoop {
     if (!(commandexists -command "scoop")) {
         log "`nInstall Scoop"
         evaladvanced "irm get.scoop.sh | iex"
-        evaladvanced "scoop bucket add main"
-        evaladvanced "scoop bucket add extras"
-    }
-    install_base_scoop_package
-}
-function install_base_scoop_package() {
-    if (!(commandexists -command "nano")) {
-        log "`nInstall nano"
-        evaladvanced "scoop bucket add main"
-        evaladvanced "scoop install main/nano"
-    }
-    if (!(commandexists -command "vim")) {
-        log "`nInstall vim"
-        evaladvanced "scoop bucket add main"
-        evaladvanced "scoop install main/vim"
     }
 }
 
@@ -123,4 +101,43 @@ function install_chocolatey() {
         evaladvanced "sudo `"$APPS_BIN_DIR\install.ps1`""
         evaladvanced "rm `"$APPS_BIN_DIR\install.ps1`""
     }
+}
+
+# ---------------------------------------------------------------------------- #
+#                              BASE PACKAGES AREA                              #
+# ---------------------------------------------------------------------------- #
+function install_base_winget_package {
+    if (!(commandexists -command "git")) {
+        log "`nInstall Git - Set Add the Git Bash profile to Windows terminal"
+        evaladvanced "winget install -i --id=Git.Git"
+    }
+    if (!(commandexists -command "gsudo")) {
+        log "`nInstall Gsudo - sudo"
+        evaladvanced "winget install --id=gerardog.gsudo"
+        evaladvanced "gsudo config CacheMode auto"
+    }
+    $app = (wingetlist "c3er.mdview")
+    if ([string]::IsNullOrEmpty($app) -or !$app -contains "c3er.mdview") {
+        log "`nInstall Markdown Viewer"
+        evaladvanced "winget install --id=c3er.mdview"
+    }
+    $app = (wingetlist "vim.vim")
+    if ([string]::IsNullOrEmpty($app) -or !$app -contains "vim.vim") {
+        log "`nInstall vim"
+        evaladvanced "winget install --id=vim.vim"
+    }
+    $app = (wingetlist "GNU.Nano")
+    if ([string]::IsNullOrEmpty($app) -or !$app -contains "GNU.Nano") {
+        log "`nInstall nano"
+        evaladvanced "winget install --id=GNU.Nano"
+    }
+}
+
+function install_base_scoop_package() {
+    evaladvanced "scoop bucket add main"
+    evaladvanced "scoop bucket add extras"
+}
+
+function install_base_chocolatey_package() {
+    infolog "Base chocolatey package is empty"
 }

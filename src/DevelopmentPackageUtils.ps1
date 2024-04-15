@@ -20,7 +20,7 @@ function install_development_package {
 
 function install_node_typescript_javascript {
     if ((show_message_dev "NodeJS/Javascript/Typescript") -eq "y") {
-        evaladvanced "winget install OpenJS.NodeJS.LTS"
+        evaladvanced "winget install --id=OpenJS.NodeJS.LTS"
         evaladvanced "npm install -g typescript"
     }
 }
@@ -34,10 +34,15 @@ function install_python {
 }
 
 function install_java {
+    $message = "`nSet JAVA_HOME in option."
     # To download executable go to: https://adoptopenjdk.net/ or https://adoptium.net/
-    if ((show_message_dev "Java") -eq "y") {
-        log "`nSet JAVA_HOME in option."
+    if ((show_message_dev "Java JDK 17") -eq "y") {
+        log "$message"
         evaladvanced "winget install -i --id=EclipseAdoptium.Temurin.17.JDK"
+    }
+    if ((show_message_dev "Java JDK 11") -eq "y") {
+        log "$message"
+        evaladvanced "winget install -i --id=EclipseAdoptium.Temurin.11.JDK"
     }
 }
 
@@ -75,8 +80,7 @@ function install_golang {
 function install_sqlite3 {
     if ((show_message_dev "Sqlite3") -eq "y") {
         infolog "`nDownload link example: https://www.sqlite.org/2022/sqlite-tools-win32-x86-{version}.zip"
-        evaladvanced "scoop bucket add main"
-        evaladvanced "scoop install main/sqlite"
+        evaladvanced "winget install --id=SQLite.SQLite"
     }
 }
 
