@@ -14,7 +14,7 @@ Get-ChildItem ("${SCRIPT_UTILS_DIR}\src\*.ps1") | ForEach-Object { . $_.FullName
 # ---------------------------------------------------------------------------- #
 $TEMP_DIR=$(mktemp -d)
 $CONFIG_DIR = "$home\.config"
-$OTHER_APPS_DIR = "$home\otherapps"
+$OTHER_APPS_DIR = "$home\.otherapps"
 $APPS_DIR="$TEMP_DIR\apps"
 $APPS_BIN_DIR="$APPS_DIR\bin"
 $IMAGE_UTILS_DIR = "$SCRIPT_UTILS_DIR\images"

@@ -40,9 +40,9 @@ function addalias {
     return
   }
   # Create powershell alias file
-  $profilePowershellAlias = "$home\powershell-alias.ps1"
+  $profilePowershellAlias = "$home\.otherapps\powershell-alias.ps1"
   if (!(fileexists "$profilePowershellAlias")) {
-    $profilePowershellCustom = "$home\powershell-profile-custom.ps1"
+    $profilePowershellCustom = "$home\.otherapps\powershell-profile-custom.ps1"
     if (!(filecontain "$profilePowershellCustom" "$profilePowershellAlias")) {
       writefile "$profilePowershellCustom" ". '$profilePowershellAlias'" -append
     }
@@ -59,68 +59,31 @@ function addalias {
     }
     if ($passArgs) {
       writefile "$profilePowershellAlias" "function $name {$command ```$args}" -append
-      addaliascmd -name "$name" -command "powershell.exe $name" -passArgs
     } else {
       writefile "$profilePowershellAlias" "function $name {$command}" -append
-      addaliascmd -name "$name" -command "powershell.exe $name"
     }
   }
-}
-
-function addaliascmd {
-  param(
-    [string] $name,
-    [string] $command,
-    [switch] $passArgs,
-    [Alias("h")]
-    [switch] $help
-  )
-  if ($help) {
-    log "addaliascmd NAME COMMAND [|-passargs]"
-    return
-  }
-  # Create prompt cmd alias file
-  $profilePromptCmdAlias = "$home\prompt-cmd-alias.cmd"
-  if (!(fileexists "$profilePromptCmdAlias")) {
-    $profileCmdCustom = "$home\prompt-cmd-profile-custom.cmd"
-    if (!(filecontain "$profileCmdCustom" "$profilePromptCmdAlias")) {
-      delfilelines "$profileCmdCustom" "exit /b 0"
-      writefile "$profileCmdCustom" "CALL ```"$profilePromptCmdAlias```"" -append
-      writefile "$profileCmdCustom" "exit /b 0" -append
-    }
-  }
-  # Add alias
-  if ((filecontain "$profilePromptCmdAlias" "doskey $name") -or (filecontain "$profilePromptCmdAlias" "DOSKEY $name")) {
-    delfilelines -file "$profilePromptCmdAlias" -match "doskey $name"
-    delfilelines -file "$profilePromptCmdAlias" -match "DOSKEY $name"
-  }
-  $line = "doskey $name=$command"
-  if ($passArgs) {
-    $line = "$line `$*"
-  }
-  writefile "$profilePromptCmdAlias" "$line" -append
 }
 function isadmin {
   $currentUser = New-Object Security.Principal.WindowsPrincipal $([Security.Principal.WindowsIdentity]::GetCurrent())
   return ($currentUser.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator))
 }
 function editalias {
-  nano.exe "$home\powershell-alias.ps1"
-}
-function editaliascmd {
-  nano.exe "$home\prompt-cmd-alias.ps1"
+  nano.exe "$home\.otherapps\powershell-alias.ps1"
 }
 function editprofile {
   nano.exe "${profile.CurrentUserAllHosts}"
 }
 function editcustomprofile {
-  nano.exe "$home\powershell-profile-custom.ps1"
-}
-function editcustomprofilecmd {
-  nano.exe "$home\prompt-cmd-profile-custom.cmd"
+  nano.exe "$home\.otherapps\powershell-profile-custom.ps1"
 }
 function reloadprofile {
-  . $PROFILE.CurrentUserAllHosts
+  $profilePowershell = $PROFILE.CurrentUserAllHosts
+  if (!(Test-Path -Path "$profilePowershell" -PathType Leaf)) {
+    infolog "Creating Powershell Script profile to run when powrshell start: $profilePowershell"
+    New-Item $profilePowershell -ItemType file -Force
+  }
+  . "$profilePowershell"
 }
 function ver {
   systeminfo | findstr /B /C:"OS Name" /B /C:"OS Version"
@@ -193,6 +156,18 @@ function removeduplicatedenvval {
     [Environment]::SetEnvironmentVariable("$envKey", $noDupesPath, $envType)
   }  
 }
+
+function trash($file) {
+  $shell = new-object -comobject "Shell.Application"
+  if ((fileexists "$file")) {
+    $file = (Resolve-Path -LiteralPath "$file")
+    $shell.Namespace(0).ParseName("$file").InvokeVerb("delete")
+  } elseif ((directoryexists "$file")) {
+    $file = (Resolve-Path -Path "$file")
+    $shell.Namespace(0).ParseName("$file").InvokeVerb("delete")
+  }
+}
+
 # Find out if the current user identity is elevated (has admin rights)
 $Host.UI.RawUI.WindowTitle = "PowerShell {0}" -f $PSVersionTable.PSVersion.ToString()
 if ((isadmin)) {

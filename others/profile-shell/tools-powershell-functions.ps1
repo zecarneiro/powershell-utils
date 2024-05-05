@@ -309,7 +309,10 @@ function runlineascommand {
 		}
     }
 }
-
+Set-Alias -Name 'now' -Value "date"
+function lhiden() {
+    cmd.exe /c dir "$pwd" /adh
+}
 
 
 

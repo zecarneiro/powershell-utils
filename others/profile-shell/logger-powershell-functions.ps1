@@ -19,6 +19,19 @@ function log {
         }
     }
 }
+function debuglog {
+    param([string] $message, [switch] $keepLine)
+    log "[" -keepLine
+    log "DEBUG" -keepLine
+    log "] " -keepLine
+    if ($keepLine) {
+        log "$message" -keepLine
+    }
+    else {
+        log "$message"
+    }
+    
+}
 function errorlog {
     param([string] $message, [switch] $keepLine)
     log "[" -keepLine

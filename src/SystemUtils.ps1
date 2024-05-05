@@ -26,31 +26,6 @@ function test_registry_path {
     }
 }
 
-function create_profile_file_prompt_cmd {
-    $regeditRoot = "HKCU:"
-    $profileCmdCustom = "$home\prompt-cmd-profile-custom.cmd"
-    $regeditName = "AutoRun"
-    $regeditPath = "\Software\Microsoft\Command Processor"
-    $regeditFullPath = "${regeditRoot}${regeditPath}"
-    if (!(Test-Path -Path "$profileCmdCustom" -PathType Leaf)) {
-        infolog "Creating Windows Command Prompt Script profile to run when CMD start: $profileCmdCustom"
-        writefile "$profileCmdCustom" "@echo off"
-        writefile "$profileCmdCustom" "exit /b 0" -append
-    }
-    if (!(Test-Path "$regeditFullPath")) {
-        New-Item -Path "$regeditRoot" -Name "$regeditPath" | Out-Null
-    }
-    $Key = Get-Item -LiteralPath $regeditFullPath
-    $regeditValue = $Key.GetValue($regeditName, $null)
-    if ($null -ne $regeditValue) {
-        if (!($regeditValue.Contains("$profileCmdCustom"))) {
-            $regeditValue = "`"$profileCmdCustom`" & $regeditValue"
-        }
-        Remove-ItemProperty -Path "$regeditFullPath" -Name "$regeditName" | Out-Null
-    }
-    New-ItemProperty -Path "$regeditFullPath" -Name "$regeditName" -Value "$regeditValue"  -PropertyType "String" | Out-Null
-}
-
 function set_user_bin_dir {
     $userBinDirectory = "$home\.local\bin"
     $pathKey = "Path"
@@ -96,7 +71,13 @@ function install_bash_apps {
 
 function create_profile_file_powershell {
     $profilePowershell = $PROFILE.CurrentUserAllHosts
-    $profilePowershellCustom = "$home\powershell-profile-custom.ps1"
+    $profilePowershellCustom = "${OTHER_APPS_DIR}\powershell-profile-custom.ps1"
+
+    # POWERSHELL
+    if (!(Test-Path -Path "$profilePowershell" -PathType Leaf)) {
+        infolog "Creating Powershell Script profile to run when powrshell start: $profilePowershell"
+        New-Item $profilePowershell -ItemType file -Force
+    }
     
     if (!(Test-Path -Path "$profilePowershellCustom" -PathType Leaf)) {
         infolog "Creating Powershel Script profile to run when powershell start: $profilePowershellCustom"
@@ -107,11 +88,6 @@ function create_profile_file_powershell {
         writefile "$profilePowershellCustom" "Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward" -append
         writefile "$profilePowershellCustom" "" -append
     }
-    # POWERSHELL
-    if (!(Test-Path -Path "$profilePowershell" -PathType Leaf)) {
-        infolog "Creating Powershell Script profile to run when powrshell start: $profilePowershell"
-        New-Item $profilePowershell -ItemType file -Force
-    }
     if (!(filecontain "$profilePowershell" "$profilePowershellCustom")) {
         writefile "$profilePowershell" ". '$profilePowershellCustom'" -append
     }
@@ -119,10 +95,8 @@ function create_profile_file_powershell {
 
 function create_profile_file {
     $profilesShellDir = "${OTHER_APPS_DIR}\profile-shell"
-    $profilePowershellCustom = "$home\powershell-profile-custom.ps1"
-    $profileCmdCustom = "$home\prompt-cmd-profile-custom.cmd"
+    $profilePowershellCustom = "${OTHER_APPS_DIR}\powershell-profile-custom.ps1"
     create_profile_file_powershell
-    create_profile_file_prompt_cmd
     Copy-Item -Path "$SCRIPT_UTILS_DIR\others\profile-shell" -Destination "$OTHER_APPS_DIR" -Recurse -Force | Out-Null
 
     # Add powershell profiles
@@ -133,17 +107,6 @@ function create_profile_file {
             writefile "$profilePowershellCustom" "$dataToInsert" -append
         }
     }
-
-    # Add prompt cmd profiles
-    delfilelines "$profileCmdCustom" "exit /b 0"
-    Get-ChildItem -Path "$profilesShellDir" -Filter *.cmd -Recurse -File | ForEach-Object {
-        $fullName = $_.FullName
-        $dataToInsert = "CALL ```"$fullName```""
-        if (!(filecontain "$profileCmdCustom" "CALL `"$fullName`"")) {
-            writefile "$profileCmdCustom" "$dataToInsert" -append
-        }
-    }
-    writefile "$profileCmdCustom" "exit /b 0" -append
     exitwithmsg "Please, Restart the Terminal to change take effect!"
 }
 
@@ -203,16 +166,21 @@ function add_context_menu {
     restartexplorer
 }
 
+function create_script_to_run_cmd_hidden {
+    param ([string] $name, [string] $command)
+    $scriptName = "$name.vbs"
+    writefile "$scriptName" "Dim WinScriptHost"
+    writefile "$scriptName" "Set WinScriptHost = CreateObject(```"WScript.Shell```")" -append
+    writefile "$scriptName" "WinScriptHost.Run ```"```"```"```" & ```"$command```" & ```"```"```"```", 0, False" -append
+    writefile "$scriptName" "Set WinScriptHost = Nothing" -append
+}
+
 function add_boot_application {
     param ([string] $name, [string] $command, [string] $commandArgs, [switch] $hidden)
     $startupDir = "$home\Start Menu\Programs\Startup"
-    $scriptName = "$command"
     if ($hidden) {
-        $scriptName = "$OTHER_APPS_DIR\$name.vbs"
-        writefile "$scriptName" "Dim WinScriptHost"
-        writefile "$scriptName" "Set WinScriptHost = CreateObject(```"WScript.Shell```")" -append
-        writefile "$scriptName" "WinScriptHost.Run ```"```"```"```" & ```"$command```" & ```"```"```"```", 0, False" -append
-        writefile "$scriptName" "Set WinScriptHost = Nothing" -append
+        create_script_to_run_cmd_hidden "$OTHER_APPS_DIR\$name-autostart" "$command"
+        $command = "$OTHER_APPS_DIR\$name-autostart.vbs"
     }
     create_shortcut_file_generic -name "$startupDir\$name.lnk" -target "$command" -targetArgs "$commandArgs"
 }
@@ -220,8 +188,8 @@ function add_boot_application {
 function del_boot_application {
     param ([string] $name)
     $startupDir = "$home\Start Menu\Programs\Startup"
-    if ((fileexists "$OTHER_APPS_DIR\${name}.vbs")) {
-        deletefile "$OTHER_APPS_DIR\${name}.vbs"
+    if ((fileexists "$OTHER_APPS_DIR\${name}-autostart.vbs")) {
+        deletefile "$OTHER_APPS_DIR\${name}-autostart.vbs"
     }
     if ((fileexists "$startupDir\$name.lnk")) {
         deletefile "$startupDir\$name.lnk"

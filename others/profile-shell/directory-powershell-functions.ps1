@@ -1,7 +1,7 @@
 # Author: José M. C. Noronha
 
 function gouserotherapps {
-    $directory = "$home\otherapps"
+    $directory = "$home\.otherapps"
     if (!(directoryexists "$directory")) {
         mkdir -p "$directory"
     }
