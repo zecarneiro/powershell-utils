@@ -165,6 +165,14 @@ function create_shortcut_file {
     create_shortcut_file_generic -name "$([Environment]::GetFolderPath('Programs'))\${name}.lnk" -target "$target" -targetArgs "$targetArgs" -terminal $terminal -icon "$icon"
 }
 
+function del_shortcut_file {
+    param ([string] $name)
+    $name = "$([Environment]::GetFolderPath('Programs'))\${name}.lnk"
+    if (fileexists "$name") {
+        Remove-Item -Path "$name" -Force
+    }
+}
+
 function create_shortcut_file_generic {
     param ([string] $name, [string] $target, [string] $targetArgs, [bool] $terminal, [string] $icon)
     if ([string]::IsNullOrEmpty($name)) {
