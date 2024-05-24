@@ -117,9 +117,11 @@ function install_base_winget_package {
         evaladvanced "gsudo config CacheMode auto"
     }
     $app = (wingetlist "c3er.mdview")
-    if ([string]::IsNullOrEmpty($app) -or !$app -contains "c3er.mdview") {
+    if (![string]::IsNullOrEmpty($app) -or !$app -contains "c3er.mdview") {
+        $commandMd = "$home\.local\bin\mdview.ps1"
         log "`nInstall Markdown Viewer"
         evaladvanced "winget install --id=c3er.mdview"
+        writefile "$commandMd" "& '$home\AppData\Local\Programs\Markdown Viewer\mdview.exe' ```$args"
     }
     $app = (wingetlist "vim.vim")
     if ([string]::IsNullOrEmpty($app) -or !$app -contains "vim.vim") {
