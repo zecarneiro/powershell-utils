@@ -74,6 +74,7 @@ function install_php {
 function install_golang {
     if ((show_message_dev "Go") -eq "y") {
         evaladvanced "winget install --id=GoLang.Go"
+        addalias "goclean" -command "go clean -modcache"
     }
 }
 

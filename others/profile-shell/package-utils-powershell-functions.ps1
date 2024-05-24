@@ -36,7 +36,10 @@ function wingetlist($filter) {
 # ---------------------------------------------------------------------------- #
 function scoopupgrade { evaladvanced "scoop update --all" }
 function scoopuninstall { scoop uninstall --purge $args }
-function scoopclean { evaladvanced "scoop cleanup --all" }
+function scoopclean {
+	evaladvanced "scoop cleanup --all"
+	evaladvanced "scoop cache rm *"
+}
 function scooplist($filter) {
 	$command_to_run = "scoop list"
 	if (![string]::IsNullOrEmpty($filter)) {
