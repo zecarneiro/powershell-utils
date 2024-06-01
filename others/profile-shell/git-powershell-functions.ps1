@@ -36,3 +36,13 @@ function gitundolastcommit {
 function gitbash {
     & "$env:PROGRAMFILES\Git\bin\bash.exe" $args
 }
+function gitmovsubmodule($old, $new) {
+    $newParentDir = (dirname "$new")
+    try {
+        mkdir "$newParentDir"
+    }
+    catch {
+        infolog "Directory already exists: $newParentDir"
+    }
+    git mv "$old" "$new"
+}

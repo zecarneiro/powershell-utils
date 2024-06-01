@@ -25,22 +25,12 @@ function writefile {
         log "writefile FILE CONTENT [ |APPEND] [ |ECONDING]"
         return
     }
-    $command_to_run = "`"$content`" | Out-File $file"
-    if ($append) {
-        $command_to_run = "$command_to_run -Append"
+    if ($append -and (fileexists "$file")) {
+        [System.IO.File]::AppendAllLines([string]"$file", [string[]]$content)
+    } else {
+        $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
+        [System.IO.File]::WriteAllLines("$file", $content, $Utf8NoBomEncoding)
     }
-    if ([string]::IsNullOrEmpty($enconding)) {
-        if ((fileextension("$file") -eq ".cmd") -or (fileextension("$file") -eq ".bat")) {
-            $enconding = "-Encoding Ascii"
-        } else {
-            $enconding = ""
-        }
-    }
-    else {
-        $enconding = "-Encoding $enconding"
-    }
-    $command_to_run = "$command_to_run $enconding | Out-Null"
-    Invoke-Expression $command_to_run
 }
 function delfilelines {
     param (
