@@ -22,7 +22,7 @@ function directoryexists($directory) {
 }
 function deletedirectory($directory) {
     if ((directoryexists "$directory")) {
-        Remove-Item "$directory" -Recurse -Force
+        evaladvanced "Remove-Item `"$directory`" -Recurse -Force"
     }
 }
 function deleteemptydirs {

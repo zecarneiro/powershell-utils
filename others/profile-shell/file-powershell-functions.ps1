@@ -51,7 +51,7 @@ function delfilelines {
 }
 function deletefile($file) {
     if ((fileexists "$file")) {
-        Remove-Item "$file" -Recurse -Force
+        evaladvanced "Remove-Item `"$file`" -Recurse -Force"
     }
 }
 function countfiles {
