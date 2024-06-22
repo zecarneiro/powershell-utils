@@ -20,6 +20,7 @@ function npmlist($filter) {
 # ---------------------------------------------------------------------------- #
 function wingetupgrade {
 	infolog "To upgrade 'Windows Terminal', go to Microsoft Store and search for 'Windows Terminal'"
+	evaladvanced "winget upgrade winget"
 	evaladvanced "winget upgrade --all"
 }
 function wingetuninstall { winget uninstall --purge $args }

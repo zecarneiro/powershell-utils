@@ -77,13 +77,20 @@ function editprofile {
 function editcustomprofile {
   nano.exe "$home\.otherapps\powershell-profile-custom.ps1"
 }
+
+# To reload profile, you need run '. reloadprofile'
 function reloadprofile {
-  $profilePowershell = $PROFILE.CurrentUserAllHosts
-  if (!(Test-Path -Path "$profilePowershell" -PathType Leaf)) {
-    infolog "Creating Powershell Script profile to run when powrshell start: $profilePowershell"
-    New-Item $profilePowershell -ItemType file -Force
+  @(
+    $Profile.AllUsersAllHosts,
+    $Profile.AllUsersCurrentHost,
+    $Profile.CurrentUserAllHosts,
+    $Profile.CurrentUserCurrentHost
+  ) | ForEach-Object {
+    if (Test-Path -Path "$_" -PathType Leaf) {
+      infolog "Running $_"
+      . $_
+    }
   }
-  . "$profilePowershell"
 }
 function ver {
   systeminfo | findstr /B /C:"OS Name" /B /C:"OS Version"

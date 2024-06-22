@@ -6,13 +6,11 @@
 function install_all_packages() {
     install_winget
     install_scoop
-    install_chocolatey
 }
 
 function install_all_base_packages() {
     install_base_winget_package
     install_base_scoop_package
-    install_base_chocolatey_package
 }
 
 # ---------------------------------------------------------------------------- #
@@ -30,8 +28,8 @@ function install_winget {
         [switch]$Passthru
     )
 
-    if (!(commandexists "winget")) {
-        log "`nInstall Winget-CLI`n" -t "info"
+    if (!(commandexists "winget") -or (confirm "Winget is already installed, would you like to update it")) {
+        infolog "Install Winget-CLI"
         Write-Verbose "[$((Get-Date).TimeofDay)] Starting $($myinvocation.mycommand)"
 
         if ($PSVersionTable.PSVersion.Major -eq 7) {
@@ -93,16 +91,6 @@ function install_scoop {
     }
 }
 
-function install_chocolatey() {
-    if (!(commandexists -command "choco")) {
-        Set-ExecutionPolicy Bypass -Scope Process -Force
-        [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
-        download -url "https://community.chocolatey.org/install.ps1" -file "$APPS_BIN_DIR\install.ps1"
-        evaladvanced "sudo `"$APPS_BIN_DIR\install.ps1`""
-        evaladvanced "rm `"$APPS_BIN_DIR\install.ps1`""
-    }
-}
-
 # ---------------------------------------------------------------------------- #
 #                              BASE PACKAGES AREA                              #
 # ---------------------------------------------------------------------------- #
@@ -114,6 +102,7 @@ function install_base_winget_package {
     if (!(commandexists -command "gsudo")) {
         log "`nInstall Gsudo - sudo"
         evaladvanced "winget install --id=gerardog.gsudo"
+        . reloadprofile
         evaladvanced "gsudo config CacheMode auto"
     }
     $app = (wingetlist "c3er.mdview")
@@ -136,10 +125,7 @@ function install_base_winget_package {
 }
 
 function install_base_scoop_package() {
+    evaladvanced "scoop install git"
     evaladvanced "scoop bucket add main"
     evaladvanced "scoop bucket add extras"
-}
-
-function install_base_chocolatey_package() {
-    infolog "Base chocolatey package is empty"
 }

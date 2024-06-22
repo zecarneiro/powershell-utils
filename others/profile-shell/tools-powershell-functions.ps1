@@ -55,6 +55,7 @@ function download {
   
         # Parameter help description
         [Parameter(Mandatory)]
+        [Alias("outfile")]
         [string]$file,
         [Alias("h")]
         [switch] $help
@@ -158,6 +159,7 @@ function download {
             # create reader / writer
             $reader = $response.GetResponseStream()
             $writer = new-object System.IO.FileStream $file, "Create"
+            $fileProgress = (filename "$file")
   
             # start download
             $finalBarCount = 0 #show final bar only one time
@@ -171,11 +173,11 @@ function download {
                 $totalMB = $total / 1024 / 1024
           
                 if ($fullSize -gt 0) {
-                    Show-Progress -TotalValue $fullSizeMB -CurrentValue $totalMB -ProgressText "$($file)" -ValueSuffix "MB"
+                    Show-Progress -TotalValue $fullSizeMB -CurrentValue $totalMB -ProgressText "$($fileProgress)" -ValueSuffix "MB"
                 }
 
                 if ($total -eq $fullSize -and $count -eq 0 -and $finalBarCount -eq 0) {
-                    Show-Progress -TotalValue $fullSizeMB -CurrentValue $totalMB -ProgressText "$($file)" -ValueSuffix "MB" -Complete
+                    Show-Progress -TotalValue $fullSizeMB -CurrentValue $totalMB -ProgressText "$($fileProgress)" -ValueSuffix "MB" -Complete
                     $finalBarCount++
                 }
             } while ($count -gt 0)
