@@ -78,7 +78,15 @@ function editcustomprofile {
   nano.exe "$home\.otherapps\powershell-profile-custom.ps1"
 }
 
-# To reload profile, you need run '. reloadprofile'
+<#
+.DESCRIPTION
+
+Relad shell without restart terminal or logout
+
+.EXAMPLE
+
+PS> . reloadprofile
+#>
 function reloadprofile {
   @(
     $Profile.AllUsersAllHosts,

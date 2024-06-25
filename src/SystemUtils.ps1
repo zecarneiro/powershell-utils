@@ -38,7 +38,7 @@ function set_user_bin_dir {
         [Environment]::SetEnvironmentVariable($pathKey, ($pathEnvArr -join ";"), [System.EnvironmentVariableTarget]::User)
         infolog "Please, Restart the Terminal to change take effect!"
     }
-    reloadprofile
+    . reloadprofile
 }
 
 function install_bash_apps {
