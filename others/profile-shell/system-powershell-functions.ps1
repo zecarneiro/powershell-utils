@@ -78,7 +78,15 @@ function editcustomprofile {
   nano.exe "$home\.otherapps\powershell-profile-custom.ps1"
 }
 
-# To reload profile, you need run '. reloadprofile'
+<#
+.DESCRIPTION
+
+Relad shell without restart terminal or logout
+
+.EXAMPLE
+
+PS> . reloadprofile
+#>
 function reloadprofile {
   @(
     $Profile.AllUsersAllHosts,
@@ -177,12 +185,17 @@ function trash($file) {
 
 # Find out if the current user identity is elevated (has admin rights)
 $Host.UI.RawUI.WindowTitle = "PowerShell {0}" -f $PSVersionTable.PSVersion.ToString()
-if ((isadmin)) {
-  $Host.UI.RawUI.WindowTitle += " [ADMIN]"
+try {
+  if ((isadmin)) {
+    $Host.UI.RawUI.WindowTitle += " [ADMIN]"
+  }
+} catch {
+  errorlog "An error occurred, when tray to check if is admin and set [ADMIN] on title of windows terminal"
 }
+
 function prompt {
   if ($isAdmin) {
-    "[" + (Get-Location) + "] # " 
+    "[" + (Get-Location) + "] # "
   }
   else {
     "[" + (Get-Location) + "] $ "

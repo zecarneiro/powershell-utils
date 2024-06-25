@@ -99,12 +99,6 @@ function install_base_winget_package {
         log "`nInstall Git - Set Add the Git Bash profile to Windows terminal"
         evaladvanced "winget install -i --id=Git.Git"
     }
-    if (!(commandexists -command "gsudo")) {
-        log "`nInstall Gsudo - sudo"
-        evaladvanced "winget install --id=gerardog.gsudo"
-        . reloadprofile
-        evaladvanced "gsudo config CacheMode auto"
-    }
     $app = (wingetlist "c3er.mdview")
     if (![string]::IsNullOrEmpty($app) -or !$app -contains "c3er.mdview") {
         $commandMd = "$home\.local\bin\mdview.ps1"
@@ -128,4 +122,10 @@ function install_base_scoop_package() {
     evaladvanced "scoop install git"
     evaladvanced "scoop bucket add main"
     evaladvanced "scoop bucket add extras"
+    if (!(commandexists -command "gsudo")) {
+        log "`nInstall Gsudo - sudo"
+        evaladvanced "scoop install gsudo"
+        . reloadprofile
+        evaladvanced "gsudo config CacheMode auto"
+    }
 }

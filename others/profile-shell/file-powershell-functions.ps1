@@ -98,3 +98,6 @@ function basename($file) {
 function touch($file) {
     "" | Out-File $file -Encoding ASCII | Out-Null
 }
+function cat($file) {
+    Get-Content -Path "$file" -Raw
+}

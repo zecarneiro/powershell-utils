@@ -20,8 +20,9 @@ function install_development_package {
 
 function install_node_typescript_javascript {
     if ((show_message_dev "NodeJS/Javascript/Typescript") -eq "y") {
-        evaladvanced "winget install --id=OpenJS.NodeJS.LTS"
-        reloadprofile
+        evaladvanced "scoop bucket add main"
+        evaladvanced "scoop install main/nodejs-lts"
+        . reloadprofile
         evaladvanced "npm install -g typescript"
     }
 }
@@ -74,10 +75,11 @@ function install_php {
 
 function install_golang {
     if ((show_message_dev "Go") -eq "y") {
-        evaladvanced "winget install --id=GoLang.Go"
+        evaladvanced "scoop bucket add main"
+        evaladvanced "scoop install main/go"
         . reloadprofile
         evaladvanced "go install golang.org/x/tools/gopls@latest"
-        addalias "goclean" -command "go clean -modcache"
+        addalias "goclean" -command "go clean -cache -modcache -testcache"
     }
 }
 

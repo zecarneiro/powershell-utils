@@ -315,6 +315,9 @@ Set-Alias -Name 'now' -Value "date"
 function lhiden() {
     cmd.exe /c dir "$pwd" /adh
 }
+function resolvePath($pathStr) {
+    $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($pathStr)
+}
 
 
 
