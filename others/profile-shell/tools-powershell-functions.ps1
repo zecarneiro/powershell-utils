@@ -318,6 +318,10 @@ function lhiden() {
 function resolvePath($pathStr) {
     $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($pathStr)
 }
+function waituntil {
+    param([int] $seconds)
+    timeout /t $seconds
+}
 
 
 

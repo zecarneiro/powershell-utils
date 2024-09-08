@@ -46,3 +46,8 @@ function gitmovsubmodule($old, $new) {
     }
     git mv "$old" "$new"
 }
+function gitaddscriptperm($script) {
+    $scriptFilename = basename "$script"
+    git update-index --chmod=+x "$script"
+    git ls-files --stage | grep "$scriptFilename"
+}
