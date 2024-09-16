@@ -172,6 +172,31 @@ function removeduplicatedenvval {
   }  
 }
 
+function setenv {
+  param(
+    [string] $envKey,
+    [string] $envValue,
+    [ValidateSet('Machine','User')]
+    [string] $envType,
+    [Alias("h")]
+    [switch] $help
+  )
+  if ($help) {
+    log "setenv ENV_KEY ENV_VALUE ENV_TYPE"
+    return
+  }
+  if ([string]::IsNullOrEmpty($envKey) -or [string]::IsNullOrEmpty($envType)) {
+    errorlog "Invalid envKey or envType"
+  } else {
+    if ($envType.Equals("Machine")) {
+      $envType = [System.EnvironmentVariableTarget]::Machine
+    } else {
+      $envType = [System.EnvironmentVariableTarget]::User
+    }
+    [Environment]::SetEnvironmentVariable("$envKey", "$envValue", "$envType")
+  }  
+}
+
 function trash($file) {
   $shell = new-object -comobject "Shell.Application"
   if ((fileexists "$file")) {

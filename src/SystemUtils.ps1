@@ -170,8 +170,8 @@ function create_script_to_run_cmd_hidden {
     param ([string] $name, [string] $command)
     $scriptName = "$name.vbs"
     writefile "$scriptName" "Dim WinScriptHost"
-    writefile "$scriptName" "Set WinScriptHost = CreateObject(```"WScript.Shell```")" -append
-    writefile "$scriptName" "WinScriptHost.Run ```"```"```"```" & ```"$command```" & ```"```"```"```", 0, False" -append
+    writefile "$scriptName" "Set WinScriptHost = CreateObject(`"WScript.Shell`")" -append
+    writefile "$scriptName" "WinScriptHost.Run `"`"`"`" & `"$command`" & `"`"`"`", 0, False" -append
     writefile "$scriptName" "Set WinScriptHost = Nothing" -append
 }
 

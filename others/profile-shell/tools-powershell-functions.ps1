@@ -322,6 +322,12 @@ function waituntil {
     param([int] $seconds)
     timeout /t $seconds
 }
+function wintowslpath($path) {
+    wsl -- wslpath -u "'$path'"
+}
+function wsltowinpath($path) {
+    wsl -- wslpath -w "'$path'"
+}
 
 
 
