@@ -123,9 +123,13 @@ function install_base_scoop_package() {
     evaladvanced "scoop bucket add main"
     evaladvanced "scoop bucket add extras"
     if (!(commandexists -command "gsudo")) {
+        $profilePowershell = $PROFILE.CurrentUserAllHosts
         log "`nInstall Gsudo - sudo"
         evaladvanced "scoop install gsudo"
         . reloadprofile
         evaladvanced "gsudo config CacheMode auto"
+        writefile "$profilePowershell" "Import-Module `"gsudoModule`"" -append
+        addalias -name "su" -command "sudo"
+        addalias -name "sudoshell" -command "sudo powershell.exe" -passArgs
     }
 }
