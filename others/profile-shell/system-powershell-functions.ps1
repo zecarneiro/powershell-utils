@@ -58,7 +58,7 @@ function addalias {
       delfilelines -file "$profilePowershellAlias" -match "$name"
     }
     if ($passArgs) {
-      writefile "$profilePowershellAlias" "function $name {$command ```$args}" -append
+      writefile "$profilePowershellAlias" "function $name {$command `$args}" -append
     } else {
       writefile "$profilePowershellAlias" "function $name {$command}" -append
     }
@@ -197,6 +197,30 @@ function setenv {
   }  
 }
 
+function deleteenv {
+  param(
+    [string] $envKey,
+    [ValidateSet('Machine','User')]
+    [string] $envType,
+    [Alias("h")]
+    [switch] $help
+  )
+  if ($help) {
+    log "deleteenv ENV_KEY ENV_TYPE"
+    return
+  }
+  if ([string]::IsNullOrEmpty($envKey) -or [string]::IsNullOrEmpty($envType)) {
+    errorlog "Invalid envKey or envType"
+  } else {
+    if ($envType.Equals("Machine")) {
+      $envType = [System.EnvironmentVariableTarget]::Machine
+    } else {
+      $envType = [System.EnvironmentVariableTarget]::User
+    }
+    [Environment]::SetEnvironmentVariable("$envKey", [NullString]::Value, "$envType")
+  }  
+}
+
 function trash($file) {
   $shell = new-object -comobject "Shell.Application"
   if ((fileexists "$file")) {
@@ -205,6 +229,64 @@ function trash($file) {
   } elseif ((directoryexists "$file")) {
     $file = (Resolve-Path -Path "$file")
     $shell.Namespace(0).ParseName("$file").InvokeVerb("delete")
+  }
+}
+
+function createservice {
+  param(
+    [string] $name,
+    [string] $executablePath,
+    [string] $displayName
+  )
+  if ([string]::IsNullOrEmpty($name) -or [string]::IsNullOrEmpty($executablePath) -or !(fileexists "$executablePath")) {
+    errorlog "Invalid name: $name or executable path: $executablePath"
+  } else {
+    if ([string]::IsNullOrEmpty($name)) {
+      sudo sc.exe create "$name" binPath="$executablePath" type=own start=auto DisplayName="$displayName"
+    } else {
+      sudo sc.exe create "$name" binPath="$executablePath" type=own start=auto
+    }
+  }
+}
+function deleteservice($name) {
+  sudo sc.exe stop "$name"
+  sudo sc.exe delete "$name"
+}
+
+function createtask {
+  param([string] $name, [string] $executable, [string] $arguments, [switch] $isPowershellScript, [switch] $asAdmin)
+  $action = ""
+  $runLevel = "Limited"
+  deletetask "$name"
+  if ($asAdmin) {
+    $runLevel = "Highest"
+  }
+
+  # Creating a launch schedule
+  $trigger = New-ScheduledTaskTrigger -AtLogon
+
+  # Action to execute
+  if ($isPowershellScript) {
+    $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-WindowStyle Hidden -ExecutionPolicy ByPass & '${executable}' '${arguments}'"
+  } else {
+    $action = New-ScheduledTaskAction -Execute "$executable" -Argument "$arguments"
+  }
+  $principal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -RunLevel $runLevel
+  
+  # (for laptops)
+  $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries
+  $task = New-ScheduledTask -Action $action -Trigger $trigger -Settings $settings -Principal $principal
+
+  # Registration of the task
+  Register-ScheduledTask "$name" -InputObject $task
+}
+
+function deletetask {
+  param([string] $name)
+  # We remove registration of the task if it already exists
+  ($is_job_already_created = Get-ScheduledTask -TaskName "$name") 2> $null;
+  if ($is_job_already_created) {
+    Unregister-ScheduledTask -Confirm:$false -TaskName "$name" | Start-Sleep 3
   }
 }
 
@@ -219,7 +301,7 @@ try {
 }
 
 function prompt {
-  if ($isAdmin) {
+  if ((isadmin)) {
     "[" + (Get-Location) + "] # "
   }
   else {
