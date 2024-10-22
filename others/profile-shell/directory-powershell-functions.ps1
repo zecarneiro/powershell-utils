@@ -22,7 +22,8 @@ function directoryexists($directory) {
 }
 function deletedirectory($directory) {
     if ((directoryexists "$directory")) {
-        evaladvanced "Remove-Item `"$directory`" -Recurse -Force"
+        infolog "Deleting: $directory"
+        Remove-Item "$directory" -Recurse -Force
     }
 }
 function deleteemptydirs {
@@ -39,8 +40,18 @@ function ldir {
     Get-ChildItem -Path "$pwd" -Directory | ForEach-Object {$_.BaseName}
 }
 function countdirs {
-    (Get-ChildItem -Path "$pwd" -recurse | where-object { $_.PSIsContainer }).Count    
+    (Get-ChildItem -Path "$pwd" -recurse | where-object { $_.PSIsContainer }).Count
 }
 function dirname($file) {
     Write-Output ([System.IO.Path]::GetDirectoryName($file))
+}
+
+function mkdir {
+    param(
+        [Parameter(ValueFromPipeline = $true)]
+        [string] $directory
+    )
+    if (![string]::IsNullOrEmpty($directory) -and !(directoryexists "$directory")) {
+        New-Item -Path "$directory" -ItemType Directory | Out-Null
+    }
 }

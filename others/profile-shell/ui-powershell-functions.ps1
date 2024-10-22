@@ -83,13 +83,12 @@ function errornotify {
 }
 
 function selectfiledialog {
-    param(
-        [string] $initialDirectory
-    )
+    # Load Assembly
+    Add-Type -AssemblyName System.Windows.Forms
+    
     $OpenFileDialog = New-Object System.Windows.Forms.OpenFileDialog
-    if (![string]::IsNullOrEmpty($initialDirectory)) {
-        $OpenFileDialog.InitialDirectory = $InitialDirectory
-    }
     $OpenFileDialog.ShowDialog() | Out-Null
-    Write-Output $OpenFileDialog.FileName
+    $filename = $OpenFileDialog.FileName
+    $data = @{ selected="$filename"; }
+    ConvertTo-Json $data -Depth 1 | Out-String
 }

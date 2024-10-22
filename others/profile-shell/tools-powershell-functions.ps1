@@ -24,10 +24,20 @@ function cutadvanced {
         return $data
     }
 }
-function extract($file) {
+function extract {
+    param(
+        [string] $file,
+        [Alias("d")]
+        [string] $destination
+    )
     if ((fileexists "$file")) {
+        if ([string]::IsNullOrEmpty($destination) -or $destination -eq " ") {
+            $destination = "$pwd"
+        } else {
+            mkdir "$destination"
+        }
         switch (fileextension "$file") {
-            ".zip" { Expand-Archive -LiteralPath "$file" -DestinationPath "$pwd" }
+            ".zip" { Expand-Archive -LiteralPath "$file" -DestinationPath "$destination" }
             Default { infolog "don't know how to extract '$file'..." }
         }
     }

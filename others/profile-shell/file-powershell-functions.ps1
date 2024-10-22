@@ -51,7 +51,8 @@ function delfilelines {
 }
 function deletefile($file) {
     if ((fileexists "$file")) {
-        evaladvanced "Remove-Item `"$file`" -Recurse -Force"
+        infolog "Deleting: $file"
+        Remove-Item "$file" -Recurse -Force
     }
 }
 function countfiles {
@@ -100,4 +101,23 @@ function touch($file) {
 }
 function cat($file) {
     Get-Content -Path "$file" -Raw
+}
+
+function teecustom {
+    [CmdletBinding()]
+    param (
+        [string]
+        $file,
+        [Parameter(ValueFromPipeline = $True)]
+        [String]
+        $content,
+        [Alias("a")]
+        [switch] $append
+    )
+    if ($append -and (fileexists "$file")) {
+        [System.IO.File]::AppendAllLines([string]"$file", [string[]]$content)
+    } else {
+        deletefile "$file"
+        New-Item -Force "$file" -Value ($content | Out-String) | Out-Null
+    }
 }
