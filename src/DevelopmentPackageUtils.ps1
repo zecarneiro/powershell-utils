@@ -16,6 +16,7 @@ function install_development_package {
     install_golang
     install_sqlite3
     install_postgres_sql
+    install_shell_check
 }
 
 function install_node_typescript_javascript {
@@ -79,7 +80,7 @@ function install_golang {
         evaladvanced "scoop install main/go"
         . reloadprofile
         evaladvanced "go install golang.org/x/tools/gopls@latest"
-        addalias "goclean" -command "go clean -cache -modcache -testcache"
+        addalias "goclean" -command "go clean -cache -modcache -testcache -fuzzcache"
     }
 }
 
@@ -96,5 +97,11 @@ function install_postgres_sql {
         infolog "For Client only only keep the options: Command line Tools"
         evaladvanced "winget install -i --id=PostgreSQL.PostgreSQL"
         & "$IMAGE_UTILS_DIR\postgressql.png"
+    }
+}
+
+function install_shell_check {
+    if ((show_message_dev "Shellcheck") -eq "y") {
+        evaladvanced "scoop install shellcheck"
     }
 }

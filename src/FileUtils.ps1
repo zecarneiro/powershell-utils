@@ -169,7 +169,7 @@ function del_shortcut_file {
     param ([string] $name)
     $name = "$([Environment]::GetFolderPath('Programs'))\${name}.lnk"
     if (fileexists "$name") {
-        Remove-Item -Path "$name" -Force
+        evaladvanced "Remove-Item -Path `"$name`" -Force"
     }
 }
 
