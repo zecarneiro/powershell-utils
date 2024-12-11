@@ -99,12 +99,10 @@ function install_base_winget_package {
         log "`nInstall Git - Set Add the Git Bash profile to Windows terminal"
         evaladvanced "winget install -i --id=Git.Git"
     }
-    $app = (wingetlist "c3er.mdview")
-    if (![string]::IsNullOrEmpty($app) -or !$app -contains "c3er.mdview") {
-        $commandMd = "$home\.local\bin\mdview.ps1"
-        log "`nInstall Markdown Viewer"
-        evaladvanced "winget install --id=c3er.mdview"
-        writefile "$commandMd" "& '$home\AppData\Local\Programs\Markdown Viewer\mdview.exe' ```$args"
+    if (!(commandexists -command "ghostwriter")) {
+        log "`nInstall Ghostwriter - https://invent.kde.org/office/ghostwriter"
+        evaladvanced "scoop bucket add extras"
+        evaladvanced "scoop install extras/ghostwriter"
     }
     $app = (wingetlist "vim.vim")
     if ([string]::IsNullOrEmpty($app) -or !$app -contains "vim.vim") {

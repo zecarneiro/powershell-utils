@@ -82,7 +82,7 @@ function icon_extractor {
             using System.Drawing;
             using System.Runtime.InteropServices;
             using System.IO;
-            
+
             namespace System {
                 public class IconExtractor {
                     public static Icon Extract(string file, int number, bool largeIcon) {
@@ -96,7 +96,7 @@ function icon_extractor {
                     private static extern int ExtractIconEx(string sFile, int iIndex, out IntPtr piLargeVersion, out IntPtr piSmallVersion, int amountIcons);
                 }
             }
-            
+
             public class PngIconConverter
             {
                 public static bool Convert(System.Drawing.Bitmap input_bit, string output_icon, int size, bool keep_aspect_ratio = false)
@@ -257,5 +257,5 @@ function select_folder_dialog {
 
 function view_markdown {
     param ([string] $file)
-    & "C:\Users\nb26323\AppData\Local\Programs\Markdown Viewer\Markdown Viewer.exe" "$file"
+    & ghostwriter "$file"
 }
