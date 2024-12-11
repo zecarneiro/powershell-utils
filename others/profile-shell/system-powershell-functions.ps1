@@ -64,6 +64,30 @@ function addalias {
     }
   }
 }
+function delalias {
+  param(
+    [string] $name,
+    [Alias("h")]
+    [switch] $help
+  )
+  if ($help) {
+    log "delalias NAME"
+    return
+  }
+  # Create powershell alias file
+  $profilePowershellAlias = "$home\.otherapps\powershell-alias.ps1"
+  if (!(fileexists "$profilePowershellAlias")) {
+    $profilePowershellCustom = "$home\.otherapps\powershell-profile-custom.ps1"
+    if (!(filecontain "$profilePowershellCustom" "$profilePowershellAlias")) {
+      writefile "$profilePowershellCustom" ". '$profilePowershellAlias'" -append
+    }
+  }
+  # Delete alias
+  $aliasCmd = "Get-Alias | ForEach-Object { if (`$_.Name -eq '$name') { Remove-Item Alias:$name }}"
+  if (!(filecontain "$profilePowershellAlias" "$aliasCmd")) {
+    writefile "$profilePowershellAlias" "$aliasCmd" -append
+  }
+}
 function isadmin {
   $currentUser = New-Object Security.Principal.WindowsPrincipal $([Security.Principal.WindowsIdentity]::GetCurrent())
   return ($currentUser.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator))
@@ -169,7 +193,7 @@ function removeduplicatedenvval {
     [Environment]::GetEnvironmentVariable("$envKey", $envType)
     $noDupesPath = (([Environment]::GetEnvironmentVariable("$envKey", $envType) -split ';' | Select-Object -Unique) -join ';')
     [Environment]::SetEnvironmentVariable("$envKey", $noDupesPath, $envType)
-  }  
+  }
 }
 
 function setenv {
@@ -194,7 +218,7 @@ function setenv {
       $envType = [System.EnvironmentVariableTarget]::User
     }
     [Environment]::SetEnvironmentVariable("$envKey", "$envValue", "$envType")
-  }  
+  }
 }
 
 function deleteenv {
@@ -218,7 +242,7 @@ function deleteenv {
       $envType = [System.EnvironmentVariableTarget]::User
     }
     [Environment]::SetEnvironmentVariable("$envKey", [NullString]::Value, "$envType")
-  }  
+  }
 }
 
 function trash($file) {
@@ -272,7 +296,7 @@ function createtask {
     $action = New-ScheduledTaskAction -Execute "$executable" -Argument "$arguments"
   }
   $principal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -RunLevel $runLevel
-  
+
   # (for laptops)
   $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries
   $task = New-ScheduledTask -Action $action -Trigger $trigger -Settings $settings -Principal $principal
