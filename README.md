@@ -1,5 +1,11 @@
 # Powershell script utils
 
+> To run any powershell script, it's necessary to run this command on powershell: Powershell -noprofile -executionpolicy bypass -file ".\MainUtils.ps1"
+
+It works with almost all markdown flavours (the below blank line matters).
+
+---
+
 To use those scripts, following
 ```ps1
 ...

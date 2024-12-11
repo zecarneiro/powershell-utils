@@ -1,7 +1,7 @@
 # Author: José M. C. Noronha
 
 function fileexists($file) {
-    if (Test-Path -Path "$file" -PathType Leaf) {
+    if (!([string]::IsNullOrEmpty($file)) -and (Test-Path -Path "$file" -PathType Leaf)) {
         RETURN $true
     }
     RETURN $false
@@ -25,12 +25,30 @@ function writefile {
         log "writefile FILE CONTENT [ |APPEND] [ |ECONDING]"
         return
     }
-    if ($append -and (fileexists "$file")) {
+    try {
+        if ($append -and (fileexists "$file")) {
         [System.IO.File]::AppendAllLines([string]"$file", [string[]]$content)
-    } else {
-        $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
-        [System.IO.File]::WriteAllLines("$file", $content, $Utf8NoBomEncoding)
+        } else {
+            $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
+            [System.IO.File]::WriteAllLines("$file", $content, $Utf8NoBomEncoding)
+        }
+    } catch {
+        errorlog "Get error on write to file: $file with func writefile"
     }
+    
+}
+function writefile-simple {
+    param(
+        [string] $file,
+        [string] $content,
+        [Alias("h")]
+        [switch] $help
+    )
+    if ($help) {
+        log "writefile-simple FILE CONTENT"
+        return
+    }
+    Out-File -FilePath "$file" -Value "$content"
 }
 function delfilelines {
     param (
@@ -45,7 +63,7 @@ function delfilelines {
     }
     if ((filecontain "$file" "$match")) {
         $tempfile = $file + ".tmp"
-        Get-Content $file | grep /V "$match" | Out-File $tempfile -Encoding Ascii
+        Get-Content $file | findstr /V "$match" | Out-File $tempfile -Encoding Ascii
         Move-Item "$tempfile" -Destination "$file" -Force
     }
 }
@@ -93,31 +111,21 @@ function filecontain {
     }
     RETURN $result
 }
-function basename($file) {
-    [System.IO.Path]::GetFileName($file)
-}
-function touch($file) {
-    "" | Out-File $file -Encoding ASCII | Out-Null
-}
-function cat($file) {
-    Get-Content -Path "$file" -Raw
-}
-
-function teecustom {
-    [CmdletBinding()]
-    param (
-        [string]
-        $file,
-        [Parameter(ValueFromPipeline = $True)]
-        [String]
-        $content,
-        [Alias("a")]
-        [switch] $append
-    )
-    if ($append -and (fileexists "$file")) {
-        [System.IO.File]::AppendAllLines([string]"$file", [string[]]$content)
+function openmarkdown {
+    param ([string] $file)
+    if ((fileexists "$file")) {
+        if ((commandexists "ghostwriter")) {
+            & ghostwriter "$file"
+        } else {
+            Get-Content "$file"
+        }
     } else {
-        deletefile "$file"
-        New-Item -Force "$file" -Value ($content | Out-String) | Out-Null
+        errorlog "Invalid given file: $file"
+    }
+}
+function openimage {
+    param ([string] $file)
+    if ((fileexists "$file")) {
+        Start-Process "$file"
     }
 }

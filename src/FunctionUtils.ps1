@@ -14,3 +14,11 @@ function trim {
     }
     return $data
 }
+
+function get_all_function_name {
+    param([string] $script)
+    [ref]$tokens      = $null
+    [ref]$parseErrors = $null
+    $ast = [Management.Automation.Language.Parser]::ParseFile("$PWD\$SCRIPT", $tokens, $parseErrors)
+    $ast.EndBlock.Statements | Where-Object { $_.Name } | ForEach-Object { Write-Host $_.Name }
+}

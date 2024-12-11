@@ -87,7 +87,8 @@ function install_winget {
 function install_scoop {
     if (!(commandexists -command "scoop")) {
         log "`nInstall Scoop"
-        evaladvanced "irm get.scoop.sh | iex"
+        Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
+        Install-Module -AllowClobber -Name scoop-completion -Scope CurrentUser # Project URL - https://github.com/Moeologist/scoop-completion
     }
 }
 
@@ -95,41 +96,40 @@ function install_scoop {
 #                              BASE PACKAGES AREA                              #
 # ---------------------------------------------------------------------------- #
 function install_base_winget_package {
-    if (!(commandexists -command "git")) {
-        log "`nInstall Git - Set Add the Git Bash profile to Windows terminal"
-        evaladvanced "winget install -i --id=Git.Git"
-    }
-    $app = (wingetlist "c3er.mdview")
-    if (![string]::IsNullOrEmpty($app) -or !$app -contains "c3er.mdview") {
-        $commandMd = "$home\.local\bin\mdview.ps1"
-        log "`nInstall Markdown Viewer"
-        evaladvanced "winget install --id=c3er.mdview"
-        writefile "$commandMd" "& '$home\AppData\Local\Programs\Markdown Viewer\mdview.exe' ```$args"
-    }
-    $app = (wingetlist "vim.vim")
-    if ([string]::IsNullOrEmpty($app) -or !$app -contains "vim.vim") {
-        log "`nInstall vim"
-        evaladvanced "winget install --id=vim.vim"
-    }
-    $app = (wingetlist "GNU.Nano")
-    if ([string]::IsNullOrEmpty($app) -or !$app -contains "GNU.Nano") {
-        log "`nInstall nano"
-        evaladvanced "winget install --id=GNU.Nano"
-    }
+    infolog "winget base package is empty"
 }
 
 function install_base_scoop_package() {
-    evaladvanced "scoop install git"
     evaladvanced "scoop bucket add main"
+    evaladvanced "scoop install main/7zip"
+    evaladvanced "scoop install main/git"
+    evaladvanced "scoop install main/vim"
+    evaladvanced "scoop install main/nano"
+    evaladvanced "scoop install main/gsudo"
+    evaladvanced "scoop install main/curl"
+    evaladvanced "scoop install main/grep"
+    evaladvanced "scoop install main/sed"
+    evaladvanced "scoop install main/uutils-coreutils"
+    evaladvanced "scoop install main/which"
+    delalias "curl"
+    delalias "grep"
+    delalias "sed"
+    delalias "cp"
+    delalias "cat"
+    delalias "mkdir"
+    delalias "ls"
+    delalias "mv"
+    delalias "ps"
+    delalias "rm"
+    delalias "rmdir"
+    delalias "sleep"
+    delalias "sort"
+    delalias "tee"
+
     evaladvanced "scoop bucket add extras"
-    if (!(commandexists -command "gsudo")) {
-        $profilePowershell = $PROFILE.CurrentUserAllHosts
-        log "`nInstall Gsudo - sudo"
-        evaladvanced "scoop install gsudo"
-        . reloadprofile
-        evaladvanced "gsudo config CacheMode auto"
-        writefile "$profilePowershell" "Import-Module `"gsudoModule`"" -append
-        addalias -name "su" -command "sudo"
-        addalias -name "sudoshell" -command "sudo powershell.exe" -passArgs
+    evaladvanced "scoop install extras/git-credential-manager"
+    if (!(commandexists -command "ghostwriter")) {
+        log "`nInstall Ghostwriter - https://invent.kde.org/office/ghostwriter"
+        evaladvanced "scoop install extras/ghostwriter"
     }
 }

@@ -17,6 +17,7 @@ function install_development_package {
     install_sqlite3
     install_postgres_sql
     install_shell_check
+    install_bash_language_server
 }
 
 function install_node_typescript_javascript {
@@ -39,13 +40,9 @@ function install_python {
 function install_java {
     $message = "`nSet JAVA_HOME in option."
     # To download executable go to: https://adoptopenjdk.net/ or https://adoptium.net/
-    if ((show_message_dev "Java JDK 17") -eq "y") {
-        log "$message"
-        evaladvanced "winget install -i --id=EclipseAdoptium.Temurin.17.JDK"
-    }
-    if ((show_message_dev "Java JDK 11") -eq "y") {
-        log "$message"
-        evaladvanced "winget install -i --id=EclipseAdoptium.Temurin.11.JDK"
+    if ((show_message_dev "Java JDK 21") -eq "y") {
+        infolog "$message"
+        evaladvanced "winget install -i --id=EclipseAdoptium.Temurin.21.JDK"
     }
 }
 
@@ -103,5 +100,11 @@ function install_postgres_sql {
 function install_shell_check {
     if ((show_message_dev "Shellcheck") -eq "y") {
         evaladvanced "scoop install shellcheck"
+    }
+}
+
+function install_bash_language_server {
+    if ((show_message_dev "Bash language server") -eq "y") {
+        evaladvanced "npm install -g bash-language-server"
     }
 }

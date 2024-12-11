@@ -41,52 +41,30 @@ function set_user_bin_dir {
     . reloadprofile
 }
 
-function install_bash_apps {
-    $userBinDirectory = "$home\.local\bin"
-    if (directoryexists "$userBinDirectory") {
-        $userOption = "n"
-        $currerntDir = "$pwd"
-        Set-Location "$userBinDirectory"
-        $allFilesInBinDir = (lf)
-        Set-Location "$currerntDir"
-        if (![string]::IsNullOrEmpty($allFilesInBinDir) -and $allFilesInBinDir -like "*unix.*") {
-            $userOption = (Read-Host "Important bash functions already instaled. Install again(y/N)? ")
-        } else {
-            $userOption = "y"
-        }
-        if ($userOption -eq "Y" -or $userOption -eq "y") {
-            # Source of those files: https://unxutils.sourceforge.net/ or on scoop: unxutils-cut
-            Expand-Archive -Path "$SCRIPT_UTILS_DIR\others\bashcmd.zip" -DestinationPath "$SCRIPT_UTILS_DIR\others"
-            Get-ChildItem "$SCRIPT_UTILS_DIR\others\bashcmd" | Foreach-Object {
-                $fullName = ($_.FullName)
-                $basename = ($_.Basename)
-                $extension = ([System.IO.Path]::GetExtension("$fullName"))
-                Move-Item $_.FullName -Destination "$userBinDirectory\${basename}unix${extension}" -Force
-            }
-            deletedirectory "$SCRIPT_UTILS_DIR\others\bashcmd"
-            exitwithmsg "Please, Restart the Terminal to change take effect!"
-        }
-    }
-}
-
 function create_profile_file_powershell {
     $profilePowershell = $PROFILE.CurrentUserAllHosts
     $profilePowershellCustom = "${OTHER_APPS_DIR}\powershell-profile-custom.ps1"
+    $bashTasbCompletionArr = @(
+        "# BASH-LIKE TAB COMPLETION IN POWERSHELL"
+        "Set-PSReadlineKeyHandler -Key Tab -Function Complete"
+        "Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward"
+        "Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward"
+    )
 
     # POWERSHELL
     if (!(Test-Path -Path "$profilePowershell" -PathType Leaf)) {
         infolog "Creating Powershell Script profile to run when powrshell start: $profilePowershell"
-        New-Item $profilePowershell -ItemType file -Force
+        New-Item "$profilePowershell" -ItemType file -Force
     }
     
     if (!(Test-Path -Path "$profilePowershellCustom" -PathType Leaf)) {
         infolog "Creating Powershel Script profile to run when powershell start: $profilePowershellCustom"
         New-Item "$profilePowershellCustom" -ItemType file -Force | Out-Null
-        writefile "$profilePowershellCustom" "# BASH-LIKE TAB COMPLETION IN POWERSHELL" -append
-        writefile "$profilePowershellCustom" "Set-PSReadlineKeyHandler -Key Tab -Function Complete" -append
-        writefile "$profilePowershellCustom" "Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward" -append
-        writefile "$profilePowershellCustom" "Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward" -append
-        writefile "$profilePowershellCustom" "" -append
+    }
+    foreach ($bashTasbCompletion in $bashTasbCompletionArr) {
+        if (!(filecontain "$profilePowershellCustom" "$bashTasbCompletion")) {
+            writefile "$profilePowershellCustom" "$bashTasbCompletion" -append
+        }
     }
     if (!(filecontain "$profilePowershell" "$profilePowershellCustom")) {
         writefile "$profilePowershell" ". '$profilePowershellCustom'" -append
@@ -107,12 +85,12 @@ function create_profile_file {
             writefile "$profilePowershellCustom" "$dataToInsert" -append
         }
     }
-    exitwithmsg "Please, Restart the Terminal to change take effect!"
+    infolog "Please, Restart the Terminal to change take effect!"
 }
 
 function set_binaries_on_system {
     param([string] $binary)
-    evaladvanced "sudo cp `"$binary`" C:\Windows\System32"
+    evaladvanced "sudopwsh cp `"$binary`" C:\Windows\System32"
     evaladvanced "rm `"$binary`""
 }
 

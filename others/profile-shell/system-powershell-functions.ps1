@@ -2,15 +2,15 @@
 # Some code has source: https://github.com/ChrisTitusTech/powershell-profile
 
 function reboot {
-  $userInput = (Read-Host "Will be reboot PC. Continue(y/N)? ")
+  $userInput = (Read-Host "Will be reboot PC. Continue(y/N)?")
   if ($userInput -eq "Y" -or $userInput -eq "y") {
-    shutdown /r /t 0
+    evaladvanced "$(which "shutdown") /r /t 0"
   }
 }
 function shutdown {
-  $userInput = (Read-Host "Will be shutdown PC. Continue(y/N)? ")
+  $userInput = (Read-Host "Will be shutdown PC. Continue(y/N)?")
   if ($userInput -eq "Y" -or $userInput -eq "y") {
-    shutdown /s /t 0
+    evaladvanced "$(which "shutdown") /s /t 0"
   }
 }
 function evaladvanced($expression, $onlyRun) {
@@ -64,10 +64,6 @@ function addalias {
     }
   }
 }
-function isadmin {
-  $currentUser = New-Object Security.Principal.WindowsPrincipal $([Security.Principal.WindowsIdentity]::GetCurrent())
-  return ($currentUser.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator))
-}
 function editalias {
   nano.exe "$home\.otherapps\powershell-alias.ps1"
 }
@@ -77,7 +73,6 @@ function editprofile {
 function editcustomprofile {
   nano.exe "$home\.otherapps\powershell-profile-custom.ps1"
 }
-
 <#
 .DESCRIPTION
 
@@ -103,6 +98,17 @@ function reloadprofile {
 function ver {
   systeminfo | findstr /B /C:"OS Name" /B /C:"OS Version"
 }
+function trash($file) {
+  $shell = new-object -comobject "Shell.Application"
+  if ((fileexists "$file")) {
+    $file = (Resolve-Path -LiteralPath "$file")
+    $shell.Namespace(0).ParseName("$file").InvokeVerb("delete")
+  } elseif ((directoryexists "$file")) {
+    $file = (Resolve-Path -Path "$file")
+    $shell.Namespace(0).ParseName("$file").InvokeVerb("delete")
+  }
+}
+
 function uptime {
   #Windows Powershell only
   if ($PSVersionTable.PSVersion.Major -eq 5 ) {
@@ -113,9 +119,6 @@ function uptime {
 }
 function ix($file) {
   curl.exe -F "f:1=@$file" ix.io
-}
-function which($name) {
-  Get-Command $name | Select-Object -ExpandProperty Definition
 }
 function export($expression) {
   if ([string]::IsNullOrEmpty($expression)) {
@@ -144,7 +147,7 @@ function pgrep($name) {
 }
 function restartexplorer {
   taskkill /f /IM explorer.exe
-  Start-Process explorer.exe
+  Start-Process "explorer.exe"
 }
 function removeduplicatedenvval {
   param(
@@ -169,9 +172,8 @@ function removeduplicatedenvval {
     [Environment]::GetEnvironmentVariable("$envKey", $envType)
     $noDupesPath = (([Environment]::GetEnvironmentVariable("$envKey", $envType) -split ';' | Select-Object -Unique) -join ';')
     [Environment]::SetEnvironmentVariable("$envKey", $noDupesPath, $envType)
-  }  
+  }
 }
-
 function setenv {
   param(
     [string] $envKey,
@@ -194,9 +196,8 @@ function setenv {
       $envType = [System.EnvironmentVariableTarget]::User
     }
     [Environment]::SetEnvironmentVariable("$envKey", "$envValue", "$envType")
-  }  
+  }
 }
-
 function deleteenv {
   param(
     [string] $envKey,
@@ -218,20 +219,8 @@ function deleteenv {
       $envType = [System.EnvironmentVariableTarget]::User
     }
     [Environment]::SetEnvironmentVariable("$envKey", [NullString]::Value, "$envType")
-  }  
-}
-
-function trash($file) {
-  $shell = new-object -comobject "Shell.Application"
-  if ((fileexists "$file")) {
-    $file = (Resolve-Path -LiteralPath "$file")
-    $shell.Namespace(0).ParseName("$file").InvokeVerb("delete")
-  } elseif ((directoryexists "$file")) {
-    $file = (Resolve-Path -Path "$file")
-    $shell.Namespace(0).ParseName("$file").InvokeVerb("delete")
   }
 }
-
 function createservice {
   param(
     [string] $name,
@@ -252,7 +241,6 @@ function deleteservice($name) {
   sudo sc.exe stop "$name"
   sudo sc.exe delete "$name"
 }
-
 function createtask {
   param([string] $name, [string] $executable, [string] $arguments, [switch] $isPowershellScript, [switch] $asAdmin)
   $action = ""
@@ -272,7 +260,7 @@ function createtask {
     $action = New-ScheduledTaskAction -Execute "$executable" -Argument "$arguments"
   }
   $principal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -RunLevel $runLevel
-  
+
   # (for laptops)
   $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries
   $task = New-ScheduledTask -Action $action -Trigger $trigger -Settings $settings -Principal $principal
@@ -280,7 +268,6 @@ function createtask {
   # Registration of the task
   Register-ScheduledTask "$name" -InputObject $task
 }
-
 function deletetask {
   param([string] $name)
   # We remove registration of the task if it already exists
@@ -289,22 +276,33 @@ function deletetask {
     Unregister-ScheduledTask -Confirm:$false -TaskName "$name" | Start-Sleep 3
   }
 }
-
-# Find out if the current user identity is elevated (has admin rights)
-$Host.UI.RawUI.WindowTitle = "PowerShell {0}" -f $PSVersionTable.PSVersion.ToString()
-try {
-  if ((isadmin)) {
-    $Host.UI.RawUI.WindowTitle += " [ADMIN]"
-  }
-} catch {
-  errorlog "An error occurred, when tray to check if is admin and set [ADMIN] on title of windows terminal"
+function sudopwsh {
+  sudo powershell.exe -Command $args
 }
-
-function prompt {
-  if ((isadmin)) {
-    "[" + (Get-Location) + "] # "
+function gsudopwsh {
+  gsudo powershell.exe -Command $args
+}
+function delalias {
+  param(
+    [string] $name,
+    [Alias("h")]
+    [switch] $help
+  )
+  if ($help) {
+    log "delalias NAME"
+    return
   }
-  else {
-    "[" + (Get-Location) + "] $ "
+  # Create powershell alias file
+  $profilePowershellAlias = "$home\.otherapps\powershell-alias.ps1"
+  if (!(fileexists "$profilePowershellAlias")) {
+    $profilePowershellCustom = "$home\.otherapps\powershell-profile-custom.ps1"
+    if (!(filecontain "$profilePowershellCustom" "$profilePowershellAlias")) {
+      writefile "$profilePowershellCustom" ". '$profilePowershellAlias'" -append
+    }
+  }
+  # Delete alias
+  $aliasCmd = "Get-Alias | ForEach-Object { if (`$_.Name -eq '$name') { Remove-Item Alias:$name -Force }}"
+  if (!(filecontain "$profilePowershellAlias" "$aliasCmd")) {
+    writefile "$profilePowershellAlias" "$aliasCmd" -append
   }
 }

@@ -3,19 +3,19 @@
 function gouserotherapps {
     $directory = "$home\.otherapps"
     if (!(directoryexists "$directory")) {
-        mkdir -p "$directory"
+        mkdir "$directory"
     }
     Set-Location "$directory"
 }
 function gouserconfig {
     $directory = "$home\.config"
     if (!(directoryexists "$directory")) {
-        mkdir -p "$directory"
+        mkdir "$directory"
     }
     Set-Location "$directory"
 }
 function directoryexists($directory) {
-    if (Test-Path -Path "$directory") {
+    if (!([string]::IsNullOrEmpty($directory)) -and (Test-Path -Path "$directory")) {
         RETURN $true
     }
     RETURN $false
@@ -28,6 +28,12 @@ function deletedirectory($directory) {
 }
 function deleteemptydirs {
     Get-ChildItem -Path "$pwd" -Recurse -Directory | Where-Object { @(Get-ChildItem $_.FullName).Length -eq 0} | Remove-Item -Force -Verbose
+}
+function isdir($directory) {
+    if (!([string]::IsNullOrEmpty($directory)) -and ((Get-Item "$directory" -Force) -is [System.IO.DirectoryInfo])) {
+        RETURN $true
+    }
+    return $FALSE
 }
 function gohome {
     Set-Location "$home"
@@ -42,16 +48,9 @@ function ldir {
 function countdirs {
     (Get-ChildItem -Path "$pwd" -recurse | where-object { $_.PSIsContainer }).Count
 }
-function dirname($file) {
-    Write-Output ([System.IO.Path]::GetDirectoryName($file))
-}
-
 function mkdir {
-    param(
-        [Parameter(ValueFromPipeline = $true)]
-        [string] $directory
-    )
-    if (![string]::IsNullOrEmpty($directory) -and !(directoryexists "$directory")) {
-        New-Item -Path "$directory" -ItemType Directory | Out-Null
-    }
+    mkdir.exe -p $args
+}
+function tempdir {
+    return [System.IO.Path]::GetTempPath()
 }

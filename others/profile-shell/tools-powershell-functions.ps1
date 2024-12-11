@@ -135,6 +135,7 @@ function download {
             if (!(hasinternet)) {
                 throw "No Internet connection available"
             }
+            infolog "Downloading from URL: $url"
         
             # invoke request
             $request = [System.Net.HttpWebRequest]::Create($url)
@@ -208,36 +209,6 @@ function download {
         }    
     }
 }
-function sha1 { Get-FileHash -Algorithm SHA1 $args }
-function md5 { Get-FileHash -Algorithm MD5 $args }
-function sha256 { Get-FileHash -Algorithm SHA256 $args }
-function mktemp {
-    param(
-        [Alias("d")]
-        [switch] $directory,
-        [Parameter(mandatory = $false)]
-        [string] $Extension,
-        [Alias("h")]
-        [switch] $help
-    )
-    if ($help) {
-        log "mktemp [d|directory] "
-        return
-    }
-    $randomfile = [System.IO.Path]::GetRandomFileName()
-    if ($Extension) {
-        $randomfile = [System.IO.Path]::ChangeExtension($randomfile, $Extension)
-    }
-    $parent = [System.IO.Path]::GetTempPath()
-    $tmpfile = (Join-Path $parent $randomfile)
-    Write-Output $tmpfile
-    if ($directory) {
-        New-Item -ItemType Directory -Path "$tmpfile" | Out-Null
-    }
-    else {
-        touch "$tmpfile"
-    }
-}
 function df { get-volume }
 function wslshutdown {
     param([switch] $force)
@@ -278,7 +249,6 @@ function wslconfigadvanced {
         wslshutdown
     }
 }
-Set-Alias -Name 'grep' -Value "findstr"
 function exitwithmsg {
     param(
         [string] $message,
@@ -356,13 +326,42 @@ function runbashscriptWSL {
 	}
     evaladvanced "wsl $distro -- $command"
 }
-
-
-
-
-
-
-
-
-
-
+function runExeFile {
+    param([string] $exeFile)
+    if ((fileexists "$exeFile") -or (commandexists "$exeFile")) {
+        evaladvanced "Start-Process '$exeFile' -Wait"
+    }
+}
+function runMsixFile {
+    param([string] $exeFile)
+    if ((fileexists "$exeFile")) {
+        evaladvanced "sudopwsh Start-Process 'Add-AppxPackage' -ArgumentList '-Path `"$exeFile`"' -Wait"
+    }
+}
+function runFilesByPath {
+    param([string] $pathWithFiles)
+    if ((directoryexists "$pathWithFiles")) {
+        $exeExtArr = @("exe", "msixbundle", ".msi")
+        foreach ($exeExt in $exeExtArr) {
+            Get-ChildItem -Path "$pathWithFiles" -Filter "*.$exeExt" | ForEach-Object {
+                $fileFull = $_.FullName
+                if ("$exeExt" -eq "msixbundle") {
+                    runMsixFile "$fileFull"
+                } elseif ("$exeExt" -eq "exe") {
+                    runExeFile "$fileFull"
+                } elseif ("$exeExt" -eq "msi") {
+                    runExeFile "$fileFull"
+                }
+            }
+        }
+    }
+    infolog "Execution of all files on '$pathWithFiles' it's done."
+    pause
+}
+function set-full-access {
+    param([string] $file)
+    $acl = "$file" | Get-Acl -ErrorAction Stop
+    $rule = [security.accesscontrol.filesystemaccessrule]::new($Env:username, 'FullControl', 'Allow')
+    $acl.AddAccessRule($rule)
+    $acl | Set-Acl
+}

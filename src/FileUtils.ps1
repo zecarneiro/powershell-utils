@@ -7,16 +7,6 @@ function get_working_dir {
     return (Get-Location | Foreach-Object { $_.Path })
 }
 
-function is_directory {
-    param (
-        [string] $file
-    )
-    if ((fileexists "$file")) {
-        return (Get-Item "$file" -Force) -is [System.IO.DirectoryInfo]
-    }
-    return $FALSE
-}
-
 # Source code: https://gist.github.com/dkarzon/a7a7e98a42dde86fca9e
 function resize_image {
     param(
@@ -82,7 +72,7 @@ function icon_extractor {
             using System.Drawing;
             using System.Runtime.InteropServices;
             using System.IO;
-            
+
             namespace System {
                 public class IconExtractor {
                     public static Icon Extract(string file, int number, bool largeIcon) {
@@ -96,7 +86,7 @@ function icon_extractor {
                     private static extern int ExtractIconEx(string sFile, int iIndex, out IntPtr piLargeVersion, out IntPtr piSmallVersion, int amountIcons);
                 }
             }
-            
+
             public class PngIconConverter
             {
                 public static bool Convert(System.Drawing.Bitmap input_bit, string output_icon, int size, bool keep_aspect_ratio = false)
@@ -203,14 +193,6 @@ function create_shortcut_file_generic {
     $lnk.Save()
 }
 
-function get_all_function_name {
-    param([string] $script)
-    [ref]$tokens      = $null
-    [ref]$parseErrors = $null
-    $ast = [Management.Automation.Language.Parser]::ParseFile("$PWD\$SCRIPT", $tokens, $parseErrors)
-    $ast.EndBlock.Statements | Where-Object { $_.Name } | ForEach-Object { Write-Host $_.Name }
-}
-
 function define_default_system_dir {
     $result=$(read_user_keyboard "Insert all User Dirs? (y/N)")
     if ($result -eq "y") {
@@ -253,9 +235,4 @@ function select_folder_dialog {
     $browser = New-Object System.Windows.Forms.FolderBrowserDialog
     $null = $browser.ShowDialog()
     return $browser.SelectedPath
-}
-
-function view_markdown {
-    param ([string] $file)
-    & "C:\Users\nb26323\AppData\Local\Programs\Markdown Viewer\Markdown Viewer.exe" "$file"
 }

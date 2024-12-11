@@ -34,7 +34,12 @@ function gitundolastcommit {
     git reset --soft HEAD~1
 }
 function gitbash {
-    & "$env:PROGRAMFILES\Git\bin\bash.exe" $args
+    if ($args) {
+        echo $args
+        & "$env:PROGRAMFILES\Git\bin\bash.exe" -c "$args"
+    } else {
+        & "$env:PROGRAMFILES\Git\bin\bash.exe"
+    }
 }
 function gitmovsubmodule($old, $new) {
     $newParentDir = (dirname "$new")
@@ -91,4 +96,18 @@ function gitstageall() {
 }
 function gitstatus() {
     git status
+}
+function gitlatestversionrepo() {
+    param([string] $owner, [string] $repo, [bool] $isrelease)
+    $urlsufix="/latest"
+    if ($isrelease) {
+        $urlsufix=""
+    }
+    $url="https://api.github.com/repos/$owner/$repo/releases${urlsufix}"
+    infolog "Get latest version from GitHub API at ${url}"
+    $version=$(curl.exe -s "$url" | ConvertFrom-Json)[0].tag_name
+    if (!([string]::IsNullOrEmpty($version)) -and $version.StartsWith("v")) {
+        $version=$($version | grep -Po 'v\K.*')
+    }
+    return $version
 }
