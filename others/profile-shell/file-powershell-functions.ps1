@@ -45,7 +45,7 @@ function delfilelines {
     }
     if ((filecontain "$file" "$match")) {
         $tempfile = $file + ".tmp"
-        Get-Content $file | grep /V "$match" | Out-File $tempfile -Encoding Ascii
+        Get-Content $file | findstr /V "$match" | Out-File $tempfile -Encoding Ascii
         Move-Item "$tempfile" -Destination "$file" -Force
     }
 }

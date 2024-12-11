@@ -135,6 +135,7 @@ function download {
             if (!(hasinternet)) {
                 throw "No Internet connection available"
             }
+            infolog "Downloading from URL: $url"
         
             # invoke request
             $request = [System.Net.HttpWebRequest]::Create($url)
@@ -278,7 +279,6 @@ function wslconfigadvanced {
         wslshutdown
     }
 }
-Set-Alias -Name 'grep' -Value "findstr"
 function exitwithmsg {
     param(
         [string] $message,
