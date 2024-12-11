@@ -92,3 +92,13 @@ function gitstageall() {
 function gitstatus() {
     git status
 }
+function gitlatestversionrepo() {
+    local owner="$1"
+    local repo="$2"
+    local url="https://api.github.com/repos/$owner/$repo/releases"
+    local version=$(curl -s "$url" | grep -Po '"tag_name": "v\K[^"]*' | head -n 1)
+    if [[ -z "${version}" ]]; then
+        version=$(curl -s "$url" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' | head -n 1)
+    fi
+    echo "$version"
+}

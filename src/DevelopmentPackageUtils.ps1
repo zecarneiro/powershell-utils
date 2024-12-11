@@ -17,6 +17,7 @@ function install_development_package {
     install_sqlite3
     install_postgres_sql
     install_shell_check
+    install_bash_language_server
 }
 
 function install_node_typescript_javascript {
@@ -103,5 +104,11 @@ function install_postgres_sql {
 function install_shell_check {
     if ((show_message_dev "Shellcheck") -eq "y") {
         evaladvanced "scoop install shellcheck"
+    }
+}
+
+function install_bash_language_server {
+    if ((show_message_dev "Bash language server") -eq "y") {
+        evaladvanced "npm install -g bash-language-server"
     }
 }
