@@ -67,6 +67,34 @@ function wsllist($filter) {
 }
 
 # ---------------------------------------------------------------------------- #
+#                               UPDATERS SCRIPTS                               #
+# ---------------------------------------------------------------------------- #
+function installupdater($updater_script, $scriptname) {
+	$updater_dir = "$home\.otherapps\updaters"
+	$scriptname = $(basename "$updater_script")
+	mkdir "$updater_dir"
+	infolog "Installing '$scriptname'"
+	Copy-Item "$updater_script" "$updater_dir"
+	oklog "Done"
+}
+
+function updatersupgrade($scriptname) {
+	$currentdir = "$pwd"
+	$updater_dir = "$home\.otherapps\updaters"
+	if (directoryexists "$updater_dir") {
+		Get-ChildItem "$updater_dir" | Foreach-Object {
+			$script = $_.FullName
+			$updatername = $(basename "$script")
+			if ([string]::IsNullOrEmpty($scriptname) -or $scriptname -eq "$updatername") {
+				promptlog "$script"
+				. "$script"
+			}
+		}
+	}
+    Set-Location "$currentdir"
+}
+
+# ---------------------------------------------------------------------------- #
 #                                SYSTEM PACKAGES                               #
 # ---------------------------------------------------------------------------- #
 function powershellupgrade {
@@ -104,6 +132,7 @@ function systemupgrade {
 	log; scoopupgrade
 	log; powershellupgrade
 	log; wslupgrade
+	log; updatersupgrade
 }
 function systemclean {
 	scoopclean

@@ -34,7 +34,12 @@ function gitundolastcommit {
     git reset --soft HEAD~1
 }
 function gitbash {
-    & "$env:PROGRAMFILES\Git\bin\bash.exe" $args
+    if ($args) {
+        echo $args
+        & "$env:PROGRAMFILES\Git\bin\bash.exe" -c "$args"
+    } else {
+        & "$env:PROGRAMFILES\Git\bin\bash.exe"
+    }
 }
 function gitmovsubmodule($old, $new) {
     $newParentDir = (dirname "$new")
@@ -93,12 +98,14 @@ function gitstatus() {
     git status
 }
 function gitlatestversionrepo() {
-    local owner="$1"
-    local repo="$2"
-    local url="https://api.github.com/repos/$owner/$repo/releases"
-    local version=$(curl -s "$url" | grep -Po '"tag_name": "v\K[^"]*' | head -n 1)
-    if [[ -z "${version}" ]]; then
-        version=$(curl -s "$url" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' | head -n 1)
-    fi
-    echo "$version"
+    param([string] $owner, [string] $repo, [bool] $isrelease)
+    $urlsufix="/latest"
+    if ($isrelease) {
+        $urlsufix=""
+    }
+    $url="https://api.github.com/repos/$owner/$repo/releases${urlsufix}"
+    infolog "Get latest version from GitHub API at ${url}"
+    $version=$(curl.exe -s "$url" | ConvertFrom-Json)[0].tag_name
+    $version=$($version | grep -Po 'v\K.*')
+    return $version
 }
