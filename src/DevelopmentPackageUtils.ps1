@@ -42,7 +42,7 @@ function install_java {
     # To download executable go to: https://adoptopenjdk.net/ or https://adoptium.net/
     if ((show_message_dev "Java JDK 21") -eq "y") {
         infolog "$message"
-        evaladvanced "winget install -i --id=EclipseAdoptium.Temurin.21.JDK"
+        evaladvanced "winget install -i --id=EclipseAdoptium.Temurin.21.JDK --accept-source-agreements --accept-package-agreements"
     }
 }
 
@@ -84,7 +84,7 @@ function install_golang {
 function install_sqlite3 {
     if ((show_message_dev "Sqlite3") -eq "y") {
         infolog "`nDownload link example: https://www.sqlite.org/2022/sqlite-tools-win32-x86-{version}.zip"
-        evaladvanced "winget install --id=SQLite.SQLite"
+        evaladvanced "winget install --id=SQLite.SQLite --accept-source-agreements --accept-package-agreements"
     }
 }
 
@@ -92,7 +92,7 @@ function install_postgres_sql {
     if ((show_message_dev "Postgres SQL") -eq "y") {
         infolog "`nDownload link example: https://www.sqlite.org/2022/sqlite-tools-win32-x86-{version}.zip"
         infolog "For Client only only keep the options: Command line Tools"
-        evaladvanced "winget install -i --id=PostgreSQL.PostgreSQL"
+        evaladvanced "winget install -i --id=PostgreSQL.PostgreSQL --accept-source-agreements --accept-package-agreements"
         & "$IMAGE_UTILS_DIR\postgressql.png"
     }
 }

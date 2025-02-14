@@ -335,22 +335,33 @@ function runExeFile {
 function runMsixFile {
     param([string] $exeFile)
     if ((fileexists "$exeFile")) {
-        evaladvanced "sudopwsh Start-Process 'Add-AppxPackage' -ArgumentList '-Path `"$exeFile`"' -Wait"
+        promptlog "Add-AppxPackage -Path `"$exeFile`""
+        Add-AppxPackage -Path "$exeFile"
     }
 }
 function runFilesByPath {
-    param([string] $pathWithFiles)
+    param([string] $pathWithFiles, [string] $fileCache="")
     if ((directoryexists "$pathWithFiles")) {
+        infolog "Sometimes it's necessary to run shell as admin."
         $exeExtArr = @("exe", "msixbundle", ".msi")
+        $fileCacheData = ""
+        if ((fileexists "$fileCache")) {
+            $fileCacheData = (Get-Content "$fileCache")
+        }
         foreach ($exeExt in $exeExtArr) {
             Get-ChildItem -Path "$pathWithFiles" -Filter "*.$exeExt" | ForEach-Object {
                 $fileFull = $_.FullName
-                if ("$exeExt" -eq "msixbundle") {
-                    runMsixFile "$fileFull"
-                } elseif ("$exeExt" -eq "exe") {
-                    runExeFile "$fileFull"
-                } elseif ("$exeExt" -eq "msi") {
-                    runExeFile "$fileFull"
+                if (($fileCacheData -notcontains "$fileFull")) {
+                    if ("$exeExt" -eq "msixbundle") {
+                        runMsixFile "$fileFull"
+                    } elseif ("$exeExt" -eq "exe") {
+                        runExeFile "$fileFull"
+                    } elseif ("$exeExt" -eq "msi") {
+                        runExeFile "$fileFull"
+                    }
+                    if (![string]::IsNullOrEmpty($fileCache)) {
+                        writefile -file "$fileCache" -content "$fileFull" -append
+                    }
                 }
             }
         }
@@ -364,4 +375,26 @@ function set-full-access {
     $rule = [security.accesscontrol.filesystemaccessrule]::new($Env:username, 'FullControl', 'Allow')
     $acl.AddAccessRule($rule)
     $acl | Set-Acl
+}
+
+function dos2unixrec($ext) {
+    Get-ChildItem -Recurse -File -Filter "*.${ext}" | ForEach-Object {
+        $filepath = $_.FullName
+        dos2unix "$filepath"
+    }
+}
+function unix2dosrec($ext) {
+    Get-ChildItem -Recurse -File -Filter "*.${ext}" | ForEach-Object {
+        $filepath = $_.FullName
+        unix2dos "$filepath"
+    }
+}
+
+function settrycatch {
+    param(
+        [string] $tryContent = "",
+        [string] $catchContent = "",
+        [string] $file
+    )
+    writefile -file "$file" -content "try { $tryContent } catch { $catchContent }" -append
 }

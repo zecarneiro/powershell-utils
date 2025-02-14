@@ -27,7 +27,7 @@ function writefile {
     }
     try {
         if ($append -and (fileexists "$file")) {
-        [System.IO.File]::AppendAllLines([string]"$file", [string[]]$content)
+            [System.IO.File]::AppendAllLines([string]"$file", [string[]]$content)
         } else {
             $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
             [System.IO.File]::WriteAllLines("$file", $content, $Utf8NoBomEncoding)
