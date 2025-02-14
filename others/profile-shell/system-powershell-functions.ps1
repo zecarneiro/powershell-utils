@@ -146,7 +146,7 @@ function pgrep($name) {
   Get-Process $name
 }
 function restartexplorer {
-  taskkill /f /IM explorer.exe
+  Stop-Process -Name explorer -Force
   Start-Process "explorer.exe"
 }
 function removeduplicatedenvval {

@@ -365,3 +365,16 @@ function set-full-access {
     $acl.AddAccessRule($rule)
     $acl | Set-Acl
 }
+
+function dos2unixrec($ext) {
+    Get-ChildItem -Recurse -File -Filter "*.${ext}" | ForEach-Object {
+        $filepath = $_.FullName
+        dos2unix "$filepath"
+    }
+}
+function unix2dosrec($ext) {
+    Get-ChildItem -Recurse -File -Filter "*.${ext}" | ForEach-Object {
+        $filepath = $_.FullName
+        unix2dos "$filepath"
+    }
+}

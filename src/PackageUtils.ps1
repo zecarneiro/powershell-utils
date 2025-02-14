@@ -100,7 +100,6 @@ function install_base_winget_package {
 }
 
 function install_base_scoop_package() {
-    evaladvanced "scoop bucket add main"
     evaladvanced "scoop install main/7zip"
     evaladvanced "scoop install main/git"
     evaladvanced "scoop install main/vim"
@@ -111,6 +110,7 @@ function install_base_scoop_package() {
     evaladvanced "scoop install main/sed"
     evaladvanced "scoop install main/uutils-coreutils"
     evaladvanced "scoop install main/which"
+    evaladvanced "scoop install main/dos2unix"
     delalias "curl"
     delalias "grep"
     delalias "sed"
@@ -125,6 +125,7 @@ function install_base_scoop_package() {
     delalias "sleep"
     delalias "sort"
     delalias "tee"
+    evaladvanced "gsudo config CacheMode auto"
 
     evaladvanced "scoop bucket add extras"
     evaladvanced "scoop install extras/git-credential-manager"
@@ -132,4 +133,6 @@ function install_base_scoop_package() {
         log "`nInstall Ghostwriter - https://invent.kde.org/office/ghostwriter"
         evaladvanced "scoop install extras/ghostwriter"
     }
+    evaladvanced "scoop bucket add alkuzad_unxutils-separated https://github.com/alkuzad/unxutils-separated"
+    evaladvanced "scoop install alkuzad_unxutils-separated/unxutils-xargs"
 }

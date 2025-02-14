@@ -1,8 +1,5 @@
 # Author: José M. C. Noronha
 
-# Imports Modules
-Import-Module scoop-completion
-
 # ---------------------------------------------------------------------------- #
 #                                      NPM                                     #
 # ---------------------------------------------------------------------------- #
@@ -100,6 +97,21 @@ function updatersupgrade($scriptname) {
 # ---------------------------------------------------------------------------- #
 #                                SYSTEM PACKAGES                               #
 # ---------------------------------------------------------------------------- #
+function loadmodule {
+	param ([parameter(Mandatory = $true)][string] $name)
+    $retVal = $true
+    if (!(Get-Module -Name $name)) {
+        $retVal = Get-Module -ListAvailable | Where-Object { $_.Name -eq $name }
+        if ($retVal) {
+			try {
+				Import-Module $name -ErrorAction SilentlyContinue
+            } catch {
+				$retVal = $false
+            }
+        }
+    }
+}
+
 function powershellupgrade {
     if (!(hasinternet)) {
 		Write-Host "No internet connection" -ForegroundColor Yellow
@@ -148,3 +160,6 @@ function startapps($filter) {
 	}
 	evaladvanced "${command_to_run}" $true
 }
+
+# Imports Modules
+loadmodule scoop-completion

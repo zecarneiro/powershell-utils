@@ -82,6 +82,26 @@ function gitglobalconfig() {
     evaladvanced "git config --global --add safe.directory '*'"
     evaladvanced "git config --global merge.ff false"
 }
+function gitsetconfig() {
+    $configArr = @(
+        "core.autocrlf input"
+        "core.fileMode false"
+        "core.logAllRefUpdates true"
+        "core.ignorecase true"
+        "pull.rebase true"
+        "--add safe.directory '*'"
+        "merge.ff false"
+    )
+    foreach ($configCmd in $configArr) {
+        evaladvanced "git config --global $configCmd"
+    }
+    if ((directoryexists "$PWD/.git") -or (fileexists "$PWD/.git")) {
+        infolog "Set local configurations"
+        foreach ($configCmd in $configArr) {
+            evaladvanced "git config $configCmd"
+        }
+    }
+}
 function gitconfiguser() {
     $username = Read-Host "Username: "
     $email = Read-Host "Email: "
