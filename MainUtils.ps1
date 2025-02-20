@@ -18,8 +18,6 @@ $SCRIPT_UTILS_DIR = ($PSScriptRoot)
 #                                   VARIABLE                                   #
 # ---------------------------------------------------------------------------- #
 $TEMP_DIR="$([System.IO.Path]::GetTempPath())pwsh-utils"
-$CONFIG_DIR = "$home\.config"
-$OTHER_APPS_DIR = "$home\.otherapps"
 $APPS_DIR="$TEMP_DIR\apps"
 $APPS_BIN_DIR="$APPS_DIR\bin"
 $IMAGE_UTILS_DIR = "$SCRIPT_UTILS_DIR\images"
@@ -31,13 +29,14 @@ $IS_DEPENDENCIES_PROCESSED_DONE = $false
 function __create_dirs {
     $dirs = @("$OTHER_APPS_DIR", "$CONFIG_DIR", "$APPS_BIN_DIR", "${home}\Start Menu\Programs\Startup")
     Foreach ($dir in $dirs) {
-        New-Item -ItemType Directory -Force -Path "$dir" | Out-Null
+        if (!(directoryexists "$dir")) {
+            New-Item -ItemType Directory -Force -Path "$dir" | Out-Null
+        }
     }
 }
 
 function install_dependencies {
     __create_dirs
-    Get-ChildItem ("${SCRIPT_UTILS_DIR}\others\profile-shell\*.ps1") | ForEach-Object { . $_.FullName } | Out-Null
     . "${SCRIPT_UTILS_DIR}\src\PackageUtils.ps1"
     install_scoop
     install_base_scoop_package
@@ -56,7 +55,6 @@ function install_dependencies {
 }
 
 if ("$typeOperation" -eq "IMPORT_ALL_LIBS") {
-    Get-ChildItem ("${SCRIPT_UTILS_DIR}\others\profile-shell\*.ps1") | ForEach-Object { . $_.FullName } | Out-Null
     Get-ChildItem ("${SCRIPT_UTILS_DIR}\src\*.ps1") | ForEach-Object { . $_.FullName } | Out-Null
     if (!(is_valid_home_dir)) {
         show_rules_username

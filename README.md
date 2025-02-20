@@ -13,16 +13,8 @@ To use those scripts, following
 ...
 ```
 
-## Add Aliases
+## Dependencies
 
-1. Go to `$HOME\Documents\WindowsPowerShell\profile.ps1`
-2. Create if not exist `Profile.ps1`
-3. Insert
+Its necessary to install those packages:
 
-```powershell
-function np {
-    C:\Windows\notepad.exe
-}
-```
-
-Where `np` is the name of the alias.
+1. **Core-Utils** - Go to this page and follow all instructions: https://github.com/zecarneiro/core-utils

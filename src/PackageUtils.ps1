@@ -88,7 +88,6 @@ function install_scoop {
     if (!(commandexists -command "scoop")) {
         log "`nInstall Scoop"
         Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
-        Install-Module -AllowClobber -Name scoop-completion -Scope CurrentUser # Project URL - https://github.com/Moeologist/scoop-completion
     }
 }
 
@@ -101,38 +100,15 @@ function install_base_winget_package {
 
 function install_base_scoop_package() {
     evaladvanced "scoop install main/7zip"
-    evaladvanced "scoop install main/git"
-    evaladvanced "scoop install main/vim"
-    evaladvanced "scoop install main/nano"
     evaladvanced "scoop install main/gsudo"
-    evaladvanced "scoop install main/curl"
-    evaladvanced "scoop install main/grep"
-    evaladvanced "scoop install main/sed"
-    evaladvanced "scoop install main/uutils-coreutils"
-    evaladvanced "scoop install main/which"
-    evaladvanced "scoop install main/dos2unix"
-    delalias "curl"
-    delalias "grep"
-    delalias "sed"
-    delalias "cp"
-    delalias "cat"
-    delalias "mkdir"
-    delalias "ls"
-    delalias "mv"
-    delalias "ps"
-    delalias "rm"
-    delalias "rmdir"
-    delalias "sleep"
-    delalias "sort"
-    delalias "tee"
     evaladvanced "gsudo config CacheMode auto"
+    evaladvanced "scoop bucket add alkuzad_unxutils-separated https://github.com/alkuzad/unxutils-separated"
+    evaladvanced "scoop install alkuzad_unxutils-separated/unxutils-xargs"
 
     evaladvanced "scoop bucket add extras"
     evaladvanced "scoop install extras/git-credential-manager"
-    if (!(commandexists -command "ghostwriter")) {
-        log "`nInstall Ghostwriter - https://invent.kde.org/office/ghostwriter"
-        evaladvanced "scoop install extras/ghostwriter"
-    }
-    evaladvanced "scoop bucket add alkuzad_unxutils-separated https://github.com/alkuzad/unxutils-separated"
-    evaladvanced "scoop install alkuzad_unxutils-separated/unxutils-xargs"
+
+    # Project URL - https://github.com/Moeologist/scoop-completion
+    evaladvanced "scoop install extras/scoop-completion"
+    setautoloadmodule "scoop-completion"
 }

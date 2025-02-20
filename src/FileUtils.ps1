@@ -196,6 +196,9 @@ function create_shortcut_file_generic {
 function define_default_system_dir {
     $result=$(read_user_keyboard "Insert all User Dirs? (y/N)")
     if ($result -eq "y") {
+        $isDocumentsChange = $false
+        $currentShellProfileDir = $(dirname "$MY_SHELL_PROFILE")
+        $newShellProfileDir = ""
         $userDirs = @{}
         $isSetDirs = $false
         $result=$(select_folder_dialog "Insert DOWNLOAD (Or cancel)")
@@ -205,6 +208,8 @@ function define_default_system_dir {
         $result=$(select_folder_dialog "Insert DOCUMENTS (Or cancel)")
         if (! [string]::IsNullOrEmpty($result)) {
             $userDirs.Add("Personal", "$result")
+            $newShellProfileDir = "$result\$(basename "$currentShellProfileDir")"
+            $isDocumentsChange = $true
         }
         $result=$(select_folder_dialog "Insert MUSIC (Or cancel)")
         if (! [string]::IsNullOrEmpty($result)) {
@@ -221,6 +226,11 @@ function define_default_system_dir {
         foreach ($userDir in $userDirs.GetEnumerator()) {
             $isSetDirs=$true
             evaladvanced "reg add `"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders`" /f /v `"$($userDir.Name)`" /t REG_SZ /d `"$($userDir.Value)`""
+        }
+        if ($isDocumentsChange) {
+            if ((directoryexists "$currentShellProfileDir")) {
+                cpdir "$currentShellProfileDir" "$newShellProfileDir"
+            }
         }
         if ($isSetDirs){
             restartexplorer
