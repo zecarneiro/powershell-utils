@@ -26,68 +26,6 @@ function test_registry_path {
     }
 }
 
-function set_user_bin_dir {
-    $userBinDirectory = "$home\.local\bin"
-    $pathKey = "Path"
-    if (!(Test-Path -Path "$userBinDirectory")) {
-        New-Item -ItemType Directory -Path "$userBinDirectory" | Out-Null
-    }
-    $pathEnvArr = ([Environment]::GetEnvironmentVariable($pathKey, [System.EnvironmentVariableTarget]::User) -split ';')
-    if (!("$userBinDirectory" -in $pathEnvArr)) {
-        $pathEnvArr += "$userBinDirectory"
-        [Environment]::SetEnvironmentVariable($pathKey, ($pathEnvArr -join ";"), [System.EnvironmentVariableTarget]::User)
-        infolog "Please, Restart the Terminal to change take effect!"
-    }
-    . reloadprofile
-}
-
-function create_profile_file_powershell {
-    $profilePowershell = $PROFILE.CurrentUserAllHosts
-    $profilePowershellCustom = "${OTHER_APPS_DIR}\powershell-profile-custom.ps1"
-    $bashTasbCompletionArr = @(
-        "# BASH-LIKE TAB COMPLETION IN POWERSHELL"
-        "Set-PSReadlineKeyHandler -Key Tab -Function Complete"
-        "Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward"
-        "Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward"
-    )
-
-    # POWERSHELL
-    if (!(Test-Path -Path "$profilePowershell" -PathType Leaf)) {
-        infolog "Creating Powershell Script profile to run when powrshell start: $profilePowershell"
-        New-Item "$profilePowershell" -ItemType file -Force
-    }
-    
-    if (!(Test-Path -Path "$profilePowershellCustom" -PathType Leaf)) {
-        infolog "Creating Powershel Script profile to run when powershell start: $profilePowershellCustom"
-        New-Item "$profilePowershellCustom" -ItemType file -Force | Out-Null
-    }
-    foreach ($bashTasbCompletion in $bashTasbCompletionArr) {
-        if (!(filecontain "$profilePowershellCustom" "$bashTasbCompletion")) {
-            writefile "$profilePowershellCustom" "$bashTasbCompletion" -append
-        }
-    }
-    if (!(filecontain "$profilePowershell" "$profilePowershellCustom")) {
-        writefile "$profilePowershell" ". '$profilePowershellCustom'" -append
-    }
-}
-
-function create_profile_file {
-    $profilesShellDir = "${OTHER_APPS_DIR}\profile-shell"
-    $profilePowershellCustom = "${OTHER_APPS_DIR}\powershell-profile-custom.ps1"
-    create_profile_file_powershell
-    Copy-Item -Path "$SCRIPT_UTILS_DIR\others\profile-shell" -Destination "$OTHER_APPS_DIR" -Recurse -Force | Out-Null
-
-    # Add powershell profiles
-    Get-ChildItem -Path "$profilesShellDir" -Filter *.ps1 -Recurse -File | ForEach-Object {
-        $fullName = $_.FullName
-        $dataToInsert = ". '$fullName'"
-        if (!(filecontain "$profilePowershellCustom" "$dataToInsert")) {
-            writefile "$profilePowershellCustom" "$dataToInsert" -append
-        }
-    }
-    infolog "Please, Restart the Terminal to change take effect!"
-}
-
 function set_binaries_on_system {
     param([string] $binary)
     evaladvanced "sudopwsh cp `"$binary`" C:\Windows\System32"

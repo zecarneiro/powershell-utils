@@ -18,8 +18,6 @@ $SCRIPT_UTILS_DIR = ($PSScriptRoot)
 #                                   VARIABLE                                   #
 # ---------------------------------------------------------------------------- #
 $TEMP_DIR="$([System.IO.Path]::GetTempPath())pwsh-utils"
-$CONFIG_DIR = "$home\.config"
-$OTHER_APPS_DIR = "$home\.otherapps"
 $APPS_DIR="$TEMP_DIR\apps"
 $APPS_BIN_DIR="$APPS_DIR\bin"
 $IMAGE_UTILS_DIR = "$SCRIPT_UTILS_DIR\images"
