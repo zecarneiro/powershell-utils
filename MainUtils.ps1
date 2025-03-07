@@ -5,7 +5,7 @@ param(
 
 # Give user permission to run any powershell script
 try {
-    Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+    Set-ExecutionPolicy -ExecutionPolicy ByPass -Scope CurrentUser
 }
 catch {
     Write-Host ""
