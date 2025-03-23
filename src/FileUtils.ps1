@@ -109,25 +109,25 @@ function define_default_system_dir {
         $newShellProfileDir = ""
         $userDirs = @{}
         $isSetDirs = $false
-        $result=$(select_folder_dialog "Insert DOWNLOAD (Or cancel)")
+        $result=$(selectfolderdialog "Insert DOWNLOAD (Or cancel)")
         if (! [string]::IsNullOrEmpty($result)) {
             $userDirs.Add("{374DE290-123F-4565-9164-39C4925E467B}", "$result")
         }
-        $result=$(select_folder_dialog "Insert DOCUMENTS (Or cancel)")
+        $result=$(selectfolderdialog "Insert DOCUMENTS (Or cancel)")
         if (! [string]::IsNullOrEmpty($result)) {
             $userDirs.Add("Personal", "$result")
             $newShellProfileDir = "$result\$(basename "$currentShellProfileDir")"
             $isDocumentsChange = $true
         }
-        $result=$(select_folder_dialog "Insert MUSIC (Or cancel)")
+        $result=$(selectfolderdialog "Insert MUSIC (Or cancel)")
         if (! [string]::IsNullOrEmpty($result)) {
             $userDirs.Add("My Music", "$result")
         }
-        $result=$(select_folder_dialog "Insert PICTURES (Or cancel)")
+        $result=$(selectfolderdialog "Insert PICTURES (Or cancel)")
         if (! [string]::IsNullOrEmpty($result)) {
             $userDirs.Add("My Pictures", "$result")
         }
-        $result=$(select_folder_dialog "Insert VIDEOS (Or cancel)")
+        $result=$(selectfolderdialog "Insert VIDEOS (Or cancel)")
         if (! [string]::IsNullOrEmpty($result)) {
             $userDirs.Add("My Video", "$result")
         }
@@ -144,13 +144,4 @@ function define_default_system_dir {
             restartexplorer
         }
     }
-}
-
-function select_folder_dialog {
-    param ([string] $message)
-    log "$message"
-    Add-Type -AssemblyName System.Windows.Forms
-    $browser = New-Object System.Windows.Forms.FolderBrowserDialog
-    $null = $browser.ShowDialog()
-    return $browser.SelectedPath
 }

@@ -34,25 +34,7 @@ function __create_dirs {
         }
     }
 }
-
-function install_dependencies {
-    __create_dirs
-    . "${SCRIPT_UTILS_DIR}\src\PackageUtils.ps1"
-    install_scoop
-    install_base_scoop_package
-    # Docs
-    titlelog "Integrate 7zip on context menu"
-    log "Step 1: Open 7-Zip File Manager(As Admin) by typing 7-Zip in Start menu or Start screen and then pressing Enter key."
-    log "Step 2: Next, navigate to Tools menu and then click Options to open Options dialog."
-    log "Step 3: Here, under 7-Zip tab, make sure that Integrate 7-Zip to shell context menu option is selected. If not, please select the option and then click Apply button. You might need to reboot your PC or restart Windows Explorer to see 7-Zip in the context menu."
-    pause
-
-    $res = Read-Host "For Windows 11 only. Do you want to enable sudo? [y/N]"
-    if ("$res" -eq "y" -or "$res" -eq "Y") {
-        powershell -Command "Start-Process -Wait PowerShell -Verb RunAs -ArgumentList 'sudo.exe config --enable enable'"
-    }
-    infolog "Please, restart terminal"
-}
+__create_dirs
 
 if ("$typeOperation" -eq "IMPORT_ALL_LIBS") {
     Get-ChildItem ("${SCRIPT_UTILS_DIR}\src\*.ps1") | ForEach-Object { . $_.FullName } | Out-Null
