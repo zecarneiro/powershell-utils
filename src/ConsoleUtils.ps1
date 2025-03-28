@@ -26,7 +26,10 @@ function confirm {
   
 function wait_for_any_key_pressed {
     param ([string] $message)
+    if ([string]::IsNullOrEmpty($message)) {
+        $message = 'Press any key to continue...'
+    }
     Write-Host -NoNewLine "$message";
-    ($Host.UI.RawUI.ReadKey("NoEcho, IncludeKeyDown"))
+    $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
     log ""
 }
