@@ -1,7 +1,4 @@
 # Author: José M. C. Noronha
-param(
-    [string] $typeOperation
-)
 
 # Give user permission to run any powershell script
 try {
@@ -21,7 +18,6 @@ $TEMP_DIR="$([System.IO.Path]::GetTempPath())pwsh-utils"
 $APPS_DIR="$TEMP_DIR\apps"
 $APPS_BIN_DIR="$APPS_DIR\bin"
 $IMAGE_UTILS_DIR = "$SCRIPT_UTILS_DIR\images"
-$IS_DEPENDENCIES_PROCESSED_DONE = $false
 
 # ---------------------------------------------------------------------------- #
 #                                     MAIN                                     #
@@ -35,11 +31,8 @@ function __create_dirs {
     }
 }
 __create_dirs
-
-if ("$typeOperation" -eq "IMPORT_ALL_LIBS") {
-    Get-ChildItem ("${SCRIPT_UTILS_DIR}\src\*.ps1") | ForEach-Object { . $_.FullName } | Out-Null
-    if (!(is_valid_home_dir)) {
-        show_rules_username
-        throw "Create a new user account and run this script again."
-    }
+Get-ChildItem ("${SCRIPT_UTILS_DIR}\src\*.ps1") | ForEach-Object { . $_.FullName } | Out-Null
+if (!(is_valid_home_dir)) {
+    show_rules_username
+    throw "Create a new user account and run this script again."
 }
